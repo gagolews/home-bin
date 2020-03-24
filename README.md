@@ -19,8 +19,7 @@ But still, you may find these useful.
 License
 -------
 
-This package is licensed under the BSD 3-Clause "New" or "Revised"
-License.
+These scripts are licensed under the BSD 3-Clause "New" or "Revised" License.
 
 Copyright (C) 2018-2020 Marek Gagolewski (https://www.gagolewski.com)
 
