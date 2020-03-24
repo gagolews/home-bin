@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Copyright (C) 2020, Marek Gagolewski, https://www.gagolewski.com
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+
+set -e
+
+if [ ! -f "${1}" ]; then
+    echo "knit2html Copyright (C) 2020, Marek Gagolewski, https://www.gagolewski.com"
+    echo "input file does not exist or no input provided"
+    echo "usage: knit2html infile [outfile]"
+    exit 1
+fi
+
+keepsources=false
+
+mimeinput=`mimetype -b "${1}"`
+
+if [ -z "${2}" ]; then
+    outfile="${1/%.Rmd/.html}"
+else
+    outfile="${2}"
+fi
+tmpdir="${1/%.html/}-tmp-html"
+knitrfile="${1/%.Rmd/}-tmp-html.Rmd"
+mdfile="${1/%.Rmd/}-tmp-html.md"
+
+#rm -f "${outfile}"
+rm -f "${mdfile}"
+
+echo "Compiling ${1} → ${outfile}..."
+
+if [ $mimeinput == "text/x-r-markdown" ]; then
+    mkdir -p "${tmpdir}"
+    rm -f "${knitrfile}"
+
+    echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+    cat /home/gagolews/bin/knit2html-options.R >> "${knitrfile}"
+    echo "\`\`\`" >> "${knitrfile}"
+    echo "" >> "${knitrfile}"
+    cat "${1}" >> "${knitrfile}"
+    #sed -e 's@^---$@<p></p>@g' "${1}" >> "${knitrfile}"
+
+
+    Rscript -e "\
+        library('knitr');                              \
+        opts_knit\$set(progress=FALSE, verbose=TRUE); \
+        opts_chunk\$set(                               \
+            cache.path='${tmpdir}/cache/',    \
+            fig.path='${tmpdir}/figures/'     \
+        );                                             \
+        knit('${knitrfile}', '${mdfile}')
+    "
+else
+    cp "${1}" "${mdfile}"
+fi
+
+
+# else: text/markdown
+
+
+
+pandoc +RTS -K512m -RTS \
+    "${mdfile}" \
+    --output "${outfile}" \
+    --from markdown+autolink_bare_uris+tex_math_single_backslash+tex_math_dollars+smart-implicit_figures \
+    --to html5 \
+    --template /home/gagolews/bin/knit2html-template.html \
+    --highlight-style tango \
+    --variable 'theme:flatly' \
+    --variable 'mathjax-url:https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' \
+    --default-image-extension .png \
+    --email-obfuscation none \
+    --number-sections \
+    --self-contained \
+    --standalone \
+    --section-divs \
+    --table-of-contents \
+    --toc-depth 2 \
+    --top-level-division=section \
+    --mathjax
+
+
+if [ "$keepsources" = false ]; then
+    if [ $mimeinput == "text/x-r-markdown" ]; then
+        rm -f "${knitrfile}"
+        rm -f "${mdfile}"
+
+        if [ -z "$(ls -A ${tmpdir})" ]; then
+            # if tmpdir empty
+            rmdir "$tmpdir"
+        fi
+    else
+        rm -f "${mdfile}"
+    fi
+fi
+
+echo "Finished compiling ${1} → ${outfile}. OK."

@@ -1,0 +1,132 @@
+#!/usr/bin/python3
+
+"""
+Preview Rmd/md file with knitr+pandoc and watch the file for changes.
+
+Copyright (C) 2018-2020 Marek Gagolewski (https://www.gagolewski.com)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+
+import PySide2
+import sys, os.path, tempfile, os, subprocess, hashlib
+from PySide2.QtWidgets import QVBoxLayout, QApplication, QWidget
+from PySide2.QtCore import QFileSystemWatcher, QUrl
+from PySide2.QtWebEngineWidgets import QWebEngineView
+
+import argparse
+parser = argparse.ArgumentParser(
+    description='Preview Rmd/md file with knitr+pandoc and watch the file for changes.',
+    epilog='Copyright (C) 2018-2020 Marek Gagolewski (https://www.gagolewski.com)'
+)
+parser.add_argument("filename")
+args = parser.parse_args()
+
+if not os.path.isfile(args.filename):
+    print("File %s does not exist."%args.filename)
+    sys.exit(1)
+
+tmpfile = tempfile.mkstemp(".html", text=True)
+os.close(tmpfile[0])
+tmpname = tmpfile[1]
+
+
+
+class MainWindow(QWidget):
+    def __init__(self, filename, tmpname):
+        super().__init__()
+        self.filename = filename
+        self.tmpname = tmpname
+        self.setWindowTitle(self.filename)
+        self.htmlview = QWebEngineView()
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.htmlview)
+        self.lasthash = ""
+
+    def rebuild(self): # this is sometimes called twice, hence we use a hashfun
+        #self.htmlview.setHtml("""
+            #<html><body>
+            #<h1 style='color:gray'>Building %s...</h1>
+            #</body></html>
+        #"""%self.filename)
+        global watcher
+        if self.filename not in watcher.files():
+            # the file might be deleted and then recreated
+            watcher.addPath(self.filename)
+
+        h = hashlib.sha1()
+        with open(self.filename, "rb") as f:
+            buf = f.read()
+            h.update(buf)
+
+        if self.lasthash == h.hexdigest():
+            return # nothing to do, file not changed
+        else:
+            self.lasthash = h.hexdigest()
+
+        ret = subprocess.run(args=["knit2html", self.filename, self.tmpname],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                       check=False)
+
+        if ret.returncode == 0:
+            #h = open(self.tmpname, "r").read()
+            self.htmlview.setUrl(QUrl.fromLocalFile(self.tmpname))
+        else:
+            self.htmlview.setHtml("""
+            <html><body>
+            <h1 style='color:red'>Error building %s...</h1>
+            <pre style='color:red'>%s</pre>
+            </body></html>
+        """%(self.filename, ret.stdout.decode()))
+
+        #.htmlview.page().view().scroll(0, 100)#int(self.lastpos.x()), int(self.lastpos.y()))
+
+
+
+app = QApplication(sys.argv)
+main = MainWindow(args.filename, tmpname)
+
+watcher = QFileSystemWatcher([args.filename])
+watcher.fileChanged.connect(main.rebuild)
+main.rebuild()
+
+screen = app.screenAt(main.pos())
+size = screen.availableGeometry()
+main.resize(size.width()//3, size.height()-64) # ugly hack, sorry
+main.move(2*size.width()//3,0)
+
+
+
+main.show()
+app.exec_()
+
+
+try:
+    os.remove(tmpname)
+except OSError:
+    pass
