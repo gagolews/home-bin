@@ -3,8 +3,9 @@
 library("knitr")
 options(encoding="UTF-8")
 opts_chunk$set(
-    dev='pdf',
-    error=FALSE
+    dev="pdf",
+    error=FALSE,
+    output_language="tex"
 )
 
 knit_hooks$set(plot=knitr:::hook_plot_md_pandoc)

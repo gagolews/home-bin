@@ -3,9 +3,10 @@
 library("knitr")
 options(encoding="UTF-8")
 opts_chunk$set(
-    dev='png',
+    dev="png",
     dpi=150,
-    error=FALSE
+    error=FALSE,
+    output_language="md"
 )
 
 knit_hooks$set(plot=knitr:::hook_plot_md_pandoc)
