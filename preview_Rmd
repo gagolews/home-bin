@@ -39,24 +39,7 @@ from PySide2.QtWidgets import QVBoxLayout, QApplication
 from PySide2.QtWidgets import QWidget, QTextEdit, QSplitter
 from PySide2.QtCore import QFileSystemWatcher, QUrl
 from PySide2.QtWebEngineWidgets import QWebEngineView
-
-
 import argparse
-parser = argparse.ArgumentParser(
-    description='Preview Rmd/md file with knitr+pandoc and watch the file for changes.',
-    epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)'
-)
-parser.add_argument("filename")
-args = parser.parse_args()
-
-if not os.path.isfile(args.filename):
-    print("File %s does not exist."%args.filename)
-    sys.exit(1)
-
-tmpfile = tempfile.mkstemp(".html", text=True)
-os.close(tmpfile[0])
-tmpname = tmpfile[1]
-
 
 
 class MainWindow(QWidget):
@@ -130,19 +113,36 @@ class MainWindow(QWidget):
         #.htmlview.page().view().scroll(0, 100)#int(self.lastpos.x()), int(self.lastpos.y()))
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='Preview Rmd/md file with knitr+pandoc and watch the file for changes.',
+        epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)'
+    )
+    parser.add_argument("filename")
+    args = parser.parse_args()
 
-app = QApplication(sys.argv)
-main = MainWindow(args.filename, tmpname)
+    if not os.path.isfile(args.filename):
+        print("File %s does not exist."%args.filename, file=sys.stderr)
+        sys.exit(1)
 
-watcher = QFileSystemWatcher([args.filename])
-watcher.fileChanged.connect(main.rebuild)
-main.rebuild()
-
-main.show()
-app.exec_()
+    tmpfile = tempfile.mkstemp(".html", text=True)
+    os.close(tmpfile[0])
+    tmpname = tmpfile[1]
 
 
-try:
-    os.remove(tmpname)
-except OSError:
-    pass
+
+    app = QApplication(sys.argv)
+    main = MainWindow(args.filename, tmpname)
+
+    watcher = QFileSystemWatcher([args.filename])
+    watcher.fileChanged.connect(main.rebuild)
+    main.rebuild()
+
+    main.show()
+    app.exec_()
+
+
+    try:
+        os.remove(tmpname)
+    except OSError:
+        pass

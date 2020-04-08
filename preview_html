@@ -1,0 +1,117 @@
+#!/usr/bin/python3
+
+"""
+Preview html file and watch it for changes.
+
+Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+
+import PySide2
+import sys, os.path, tempfile, os, subprocess, hashlib
+from PySide2.QtWidgets import QVBoxLayout, QApplication
+from PySide2.QtWidgets import QWidget, QTextEdit, QSplitter
+from PySide2.QtCore import QFileSystemWatcher, QUrl
+from PySide2.QtWebEngineWidgets import QWebEngineView
+import time
+
+import argparse
+
+
+class MainWindow(QWidget):
+    def __init__(self, filename):
+        super().__init__()
+        self.filename = filename
+        self.setWindowTitle(self.filename)
+        self.htmlview = QWebEngineView()
+
+
+        screen = app.screenAt(self.pos())
+        size = screen.availableGeometry()
+        self.resize(size.width()//3, size.height())
+        self.move(2*size.width()//3,0)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.htmlview)
+        self.setLayout(layout)
+        self.lasthash = ""
+
+    def refresh(self): # this is sometimes called twice, hence we use a hashfun
+        #self.htmlview.setHtml("""
+            #<html><body>
+            #<h1 style='color:gray'>Building %s...</h1>
+            #</body></html>
+        #"""%self.filename)
+        global watcher
+
+        while not os.path.isfile(self.filename):
+            time.sleep(0.1)
+
+        if self.filename not in watcher.files():
+            # the file might be deleted and then recreated
+            watcher.addPath(self.filename)
+
+
+
+        h = hashlib.sha1()
+        with open(self.filename, "rb") as f:
+            buf = f.read()
+            h.update(buf)
+
+        if self.lasthash == h.hexdigest():
+            return # nothing to do, file not changed
+        else:
+            self.lasthash = h.hexdigest()
+
+        self.htmlview.setUrl(QUrl.fromLocalFile(self.filename))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='Preview html file and watch it for changes.',
+        epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)'
+    )
+    parser.add_argument("filename")
+    args = parser.parse_args()
+
+    if not os.path.isfile(args.filename):
+        print("File %s does not exist."%args.filename, file=sys.stderr)
+        sys.exit(1)
+
+
+    app = QApplication(sys.argv)
+    main = MainWindow(os.path.abspath(args.filename))
+
+    watcher = QFileSystemWatcher([os.path.abspath(args.filename)])
+    watcher.fileChanged.connect(main.refresh)
+    main.refresh()
+
+    main.show()
+    app.exec_()
+
