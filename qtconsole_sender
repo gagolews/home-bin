@@ -1,6 +1,19 @@
 #!/usr/bin/python3
 
 """
+TO DO:
+    * multiple tabs with different kernels, switch via
+    alt+tab number and alt+arrows
+    * sending always to default tab
+    * qtconsole_listener kernel1 kernel2 kernel3 -- multiple tabs
+    * help pane at the bottom - react to: ?str.strip help(xxx)
+    * clear console
+    * restart kernel
+    * kill/terminate/shutdown
+    * ask to quit
+"""
+
+"""
 Send to a TCP port the commands execute on a Jupyter-QtConsole.
 
 Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)
@@ -44,6 +57,7 @@ import argparse
 
 
 
+
 def write_socket(text, port):
     socket = QtNetwork.QTcpSocket()
     socket.connectToHost(QtNetwork.QHostAddress.LocalHost, port)
@@ -61,6 +75,7 @@ def write_socket(text, port):
         raise Exception("Error sending buffer size to socket.")
 
     # send data buffer
+
 
     cur = 0
     while cur < text_size:
@@ -84,11 +99,69 @@ if __name__ == "__main__":
         epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("cmd", type=str, help="Command to execute.")
+    parser.add_argument("cmd", type=str, help="Command to execute, '-' to read from the standard input.")
+    parser.add_argument("--file", default="", type=str,
+                        help="File path. Ignored unless cmd is '-'.")
+    parser.add_argument("--cursor", default="0:0", type=str,
+                        help="Cursor position as row:col. Ignored unless cmd is '-'.")
+    parser.add_argument("--selection", default=":-:", type=str,
+                        help="Selection position from-to of the form row:col-row:col. Ignored unless cmd is '-'.")
     parser.add_argument("--port", default=6666, type=int,
             help="TCP port to connect at the localhost.")
     args = parser.parse_args()
 
-    text = args.cmd
-    #text = repr(str(list(range(1))))
-    write_socket(text, args.port)
+    if args.cmd == "-":
+        # read from STDIN
+        text = sys.stdin.readlines() # includes the trailing \ns
+
+        if args.selection == ":-:":
+            # nothing selected -- execute the current line
+            cursor = args.cursor.split(":") # row:col
+            cursor = int(cursor[0]), int(cursor[1])
+            text = text[cursor[0]].strip()
+        else:
+            # args.selection is 0-based
+            sel_from, sel_to = args.selection.split("-")
+            sel_from = sel_from.split(":")
+            sel_from = int(sel_from[0]), int(sel_from[1])
+            sel_to = sel_to.split(":")
+            sel_to = int(sel_to[0]), int(sel_to[1])
+
+            indent_size = len(text[sel_from[0]])-len(text[sel_from[0]].lstrip())
+            indent_prefix = text[sel_from[0]][:indent_size]
+            print(repr(indent_prefix), file=sys.stderr)
+
+            if sel_to[1] == 0:   # a:b-c:0 -> a:b-(c-1):-1
+                sel_to = sel_to[0]-1, -1
+
+            text = text[sel_from[0]:(sel_to[0]+1)]
+            text[0] = text[0][sel_from[1]:]
+
+            if sel_from[0] == sel_to[0]: # single text line
+                text[0] = text[0][:(sel_to[1]-sel_from[1])]
+            else:
+                text[-1] = text[-1][:sel_to[1]]
+
+            # remove trailing white-spaces and the leading indentation
+            indent_remove = (indent_size > 0)
+            for i in range(len(text)):
+                if indent_remove and text[i][:indent_size] == indent_prefix:
+                    text[i] = text[i][indent_size:]
+                else:
+                    # there might be "indent - no indent - indent"
+                    # -> make sure you only unindent the first block
+                    indent_remove = False
+                text[i] = text[i].rstrip()
+            # correct indentation of the remaining lines
+            text = "\n".join(text)
+
+    else:
+        text = args.cmd
+
+    text = text.rstrip()
+    #print(text, file=sys.stderr)
+
+    if not text:
+        print("Command is empty.")
+    else:
+        write_socket(text, args.port)

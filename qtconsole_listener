@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
         text_size = int(socket.readLine().data().decode("utf-8"))
         assert text_size > 0
 
-        print("Reading %d bytes."%text_size)
+        print("Receiving %d bytes... "%text_size, end="")
         text = QtCore.QByteArray()
         first = True
         while text.size() != text_size:
@@ -106,10 +106,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             buf = socket.readAll()
             text.append(QtCore.QByteArray.fromRawData(buf))
-            print(text.size())
+            print(text.size(), end=", ")
             first = False
 
-        print("%d bytes received."%text_size)
+        print("OK, %d bytes received."%text_size)
         #socket.write(QtCore.QByteArray.fromRawData("OK".encode("utf-8")))
         #socket.waitForBytesWritten(-1)
         socket.disconnectFromHost()
@@ -125,9 +125,13 @@ class MainWindow(QtWidgets.QMainWindow):
         cursor = self.jupyter_widget._get_end_cursor()
         cursor.beginEditBlock()
         try:
+            first = True
             for line in code.splitlines():
+                if not first:
+                    self.jupyter_widget._insert_continuation_prompt(cursor, False)
+                else:
+                    first = False
                 cursor.insertText(line+"\n")
-                self.jupyter_widget._insert_continuation_prompt(cursor, False)
         finally:
             cursor.endEditBlock()
         self.jupyter_widget.do_execute(source=code, complete=True, indent=False)
