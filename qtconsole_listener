@@ -33,6 +33,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+
+"""
+TO DO:
+    * help pane at the bottom - react to: ?str.strip help(xxx)
+"""
+
+
 SOCKET_BUF_SIZE = 2048
 
 
@@ -50,39 +57,133 @@ import argparse
 
 
 
+class RicherJupyterWidget(RichJupyterWidget):
 
-class MainWindow(QtWidgets.QMainWindow):
-
-    def __init__(self, port, kernel_name):
-        super().__init__()
-
-        self.server = QtNetwork.QTcpServer(self)
-        if not self.server.listen(QtNetwork.QHostAddress.LocalHost, port):
-            raise Exception("Unable set up a local TCP server at port %d"%port)
-        self.server.newConnection.connect(self.new_connection)
-
+    def __init__(self, parent, kernel_name):
         kernel_manager = QtKernelManager(kernel_name=kernel_name)
         kernel_manager.start_kernel()
 
         kernel_client = kernel_manager.client()
         kernel_client.start_channels()
 
-        self.jupyter_widget = RichJupyterWidget()
-        self.jupyter_widget.kernel_manager = kernel_manager
-        self.jupyter_widget.kernel_client = kernel_client
+        super().__init__(parent)
 
-        #self.jupyter_widget.set_default_style("linux")
-        #self.jupyter_widget.syntax_style = "monokai"
-        self.jupyter_widget._set_font(QtGui.QFont("Ubuntu Mono", 12))
+        self.kernel_manager = kernel_manager
+        self.kernel_client = kernel_client
 
-        self.setCentralWidget(self.jupyter_widget)
-        print("Kernel %s listening at port %d."%(kernel_name, port))
+        #self.set_default_style("linux")
+        #self.syntax_style = "monokai"
+        self._set_font(QtGui.QFont("Ubuntu Mono", 12))
+        self.confirm_restart = False
+
+
+
+class MainWindow(QtWidgets.QMainWindow):
+
+    def __init__(self, port, kernel_names):
+        super().__init__()
+
+        self.setWindowTitle("qtconsole_listener")
+
+        self.server = QtNetwork.QTcpServer(self)
+        if not self.server.listen(QtNetwork.QHostAddress.LocalHost, port):
+            raise Exception("Unable to set up a local TCP server at port %d"%port)
+        self.server.newConnection.connect(self.new_connection)
+
+        self.tabs = QtWidgets.QTabWidget(self)
+
+        self.jupyter_widgets = []
+        for i in range(len(kernel_names)):
+            jw = RicherJupyterWidget(self.tabs, kernel_names[i])
+            self.jupyter_widgets.append(jw)
+            self.tabs.addTab(jw, "&"+kernel_names[i])
+
+        self.setCentralWidget(self.tabs)
+        self.jupyter_widgets[0]._control.setFocus()
+        print("Kernels %r started. Listening at port %d."%(kernel_names, port))
+
+        file_menu = self.menuBar().addMenu("&File")
+        act = file_menu.addAction("&Quit", self.close, QtGui.QKeySequence.Quit)
+        file_menu.addAction(act)
+
+        kernel_menu = self.menuBar().addMenu("&Kernel")
+        act = kernel_menu.addAction("&Next Tab", self.next_tab, QtGui.QKeySequence.Forward)
+        kernel_menu.addAction(act)
+        act = kernel_menu.addAction("&Previous Tab", self.previous_tab, QtGui.QKeySequence.Back)
+        kernel_menu.addAction(act)
+        act = kernel_menu.addAction("&Clear Outputs", self.clear_output)
+        kernel_menu.addAction(act)
+        act = kernel_menu.addAction("&Interrupt Kernel", self.interrupt)
+        kernel_menu.addAction(act)
+        act = kernel_menu.addAction("&Restart Kernel", self.restart)
+        kernel_menu.addAction(act)
+
+        file_menu = self.menuBar().addMenu("&Help")
+        act = file_menu.addAction("&About", self.about)
+        file_menu.addAction(act)
+
+
+        screen = app.screenAt(self.pos())
+        size = screen.availableGeometry()
+        self.resize(size.width()//3, size.height())
+        self.move(2*size.width()//3,0)
+
+        #jupyter_widget.clear_output() # current line of output
+
+
+        #QKeySequence.New
+        #QKeySequence.Close
+
+    def interrupt(self):
+        jw = self.jupyter_widgets[self.tabs.currentIndex()]
+        jw.request_interrupt_kernel()
+
+
+    def restart(self):
+        ret = QtWidgets.QMessageBox.question(self, "Confirm Kernel Restart",
+                "Shutdown the current kernel?")
+        if ret == QtWidgets.QMessageBox.Yes:
+            jw = self.jupyter_widgets[self.tabs.currentIndex()]
+            jw.request_interrupt_kernel()
+            jw.restart_kernel(None, now=False)
+
+
+    def closeEvent(self, event):
+        ret = QtWidgets.QMessageBox.question(self, "Confirm Quit",
+                "Shutdown all kernels and see you later?")
+        if ret == QtWidgets.QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
+    def clear_output(self):
+        jw = self.jupyter_widgets[self.tabs.currentIndex()]
+        jw.reset(clear=True)
+
+    def next_tab(self):
+        self.tabs.setCurrentIndex(min(self.tabs.currentIndex()+1, self.tabs.count()-1))
+
+    def previous_tab(self):
+        self.tabs.setCurrentIndex(max(self.tabs.currentIndex()-1, 0))
 
 
     def shutdown_kernel(self):
-        self.jupyter_widget.kernel_client.stop_channels()
-        self.jupyter_widget.kernel_manager.shutdown_kernel()
+        for i in range(len(self.jupyter_widgets)):
+            self.jupyter_widgets[i].kernel_client.stop_channels()
+            self.jupyter_widgets[i].kernel_manager.shutdown_kernel()
         self.server.close()
+        print("Bye.")
+
+
+    def about(self):
+        ret = QtWidgets.QMessageBox.about(self, "About qtconsole_listener",
+                "An application that features a Jupyter-QtConsole " +
+                "and listens for commands to execute on a TCP port.\n\n"
+                "Copyright (C) 2020 Marek Gagolewski\nhttps://www.gagolewski.com\n\n"+
+                "QtConsole: https://github.com/jupyter/qtconsole\n"+
+                "Project Jupyter: https://jupyter.org/\n\n"+
+                "Licensed under the BSD 3-Clause License"
+                )
 
 
     def new_connection(self):
@@ -110,8 +211,6 @@ class MainWindow(QtWidgets.QMainWindow):
             first = False
 
         print("OK, %d bytes received."%text_size)
-        #socket.write(QtCore.QByteArray.fromRawData("OK".encode("utf-8")))
-        #socket.waitForBytesWritten(-1)
         socket.disconnectFromHost()
         socket.close()
         socket = None
@@ -122,19 +221,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def execute(self, code):
-        cursor = self.jupyter_widget._get_end_cursor()
+        jw = self.jupyter_widgets[self.tabs.currentIndex()]
+        cursor = jw._get_end_cursor()
         cursor.beginEditBlock()
         try:
             first = True
             for line in code.splitlines():
                 if not first:
-                    self.jupyter_widget._insert_continuation_prompt(cursor, False)
+                    jw._insert_continuation_prompt(cursor, False)
                 else:
                     first = False
                 cursor.insertText(line+"\n")
         finally:
             cursor.endEditBlock()
-        self.jupyter_widget.do_execute(source=code, complete=True, indent=False)
+
+        jw.do_execute(source=code, complete=True, indent=False)
 
 
 
@@ -149,7 +250,7 @@ if __name__ == "__main__":
         epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("kernel", default="python3", type=str, nargs='?',
+    parser.add_argument("kernel", default=['python3', 'ir'], type=str, nargs='*',
         help="The id of an installed kernel, e.g., 'python3' (the default),\
             'bash' or 'ir'.")
     parser.add_argument("--port", default=6666, type=int,

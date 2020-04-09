@@ -1,17 +1,5 @@
 #!/usr/bin/python3
 
-"""
-TO DO:
-    * multiple tabs with different kernels, switch via
-    alt+tab number and alt+arrows
-    * sending always to default tab
-    * qtconsole_listener kernel1 kernel2 kernel3 -- multiple tabs
-    * help pane at the bottom - react to: ?str.strip help(xxx)
-    * clear console
-    * restart kernel
-    * kill/terminate/shutdown
-    * ask to quit
-"""
 
 """
 Send to a TCP port the commands execute on a Jupyter-QtConsole.
@@ -85,7 +73,7 @@ def write_socket(text, port):
             raise Exception("Error sending buffer to socket.")
         cur += cur_n
 
-    print("Wrote %d bytes."%text_size)
+    print("Sent %d bytes."%text_size)
 
     socket.waitForDisconnected(-1)
     socket.close()
