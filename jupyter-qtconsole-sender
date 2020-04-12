@@ -45,52 +45,92 @@ import argparse
 
 
 
-def get_command(cmd, selection, cursor):
-    if args.cmd != "-":
+def find_chunk_bound(text, pos, adv, separators):
+    while 0 <= pos+adv < len(text):
+        line = text[pos+adv].lstrip()
+
+        for sep in separators:
+            if not sep:
+                if not line:
+                    return pos, ""
+            else:
+                if line[:len(sep)] == sep:  # Note that "aa"[:100] == "aa"
+                    return pos, sep
+        pos += adv
+    return pos, ""
+
+
+def get_command(cmd, selection, cursor, chunk):
+    if cmd != "-":
         return cmd
 
     # read from STDIN
     text = sys.stdin.readlines() # includes the trailing \ns
 
-    if args.selection == ":-:":
-        # nothing selected -- execute the current line
-        cursor = args.cursor.split(":") # row:col
-        cursor = int(cursor[0]), int(cursor[1])
-        text = text[cursor[0]].strip()
-    else:
-        # args.selection is 0-based
-        sel_from, sel_to = args.selection.split("-")
-        sel_from = sel_from.split(":")
-        sel_from = int(sel_from[0]), int(sel_from[1])
-        sel_to = sel_to.split(":")
-        sel_to = int(sel_to[0]), int(sel_to[1])
+    if selection == ":-:":
+        # nothing selected -- execute the current line or chunk
+        row, _ = cursor.split(":") # row:col
+        row = int(row)
 
-        indent_size = len(text[sel_from[0]])-len(text[sel_from[0]].lstrip())
-        indent_prefix = text[sel_from[0]][:indent_size]
-
-        if sel_to[1] == 0:   # a:b-c:0 -> a:b-(c-1):-1
-            sel_to = sel_to[0]-1, -1
-
-        text = text[sel_from[0]:(sel_to[0]+1)]
-        text[0] = text[0][sel_from[1]:]
-
-        if sel_from[0] == sel_to[0]: # single text line
-            text[0] = text[0][:(sel_to[1]-sel_from[1])]
+        if not chunk:
+            # current line then
+            start_pos, end_pos = row, row
         else:
-            text[-1] = text[-1][:sel_to[1]]
+            # chunks (TODO: currently) are defined as code blocks
+            # separated by either empty lines or leading ```s,
+            # whichever comes first.
+            start_pos, start_sep = find_chunk_bound(text, row, -1, ["", "```"])
+            end_pos, end_sep = find_chunk_bound(text, row, +1, ["", "```"])
 
-        # remove trailing white-spaces and the leading indentation
-        indent_remove = (indent_size > 0)
-        for i in range(len(text)):
-            if indent_remove and text[i][:indent_size] == indent_prefix:
-                text[i] = text[i][indent_size:]
-            else:
-                # there might be "indent - no indent - indent"
-                # -> make sure you only unindent the first block
-                indent_remove = False
-            text[i] = text[i].rstrip()
-        # correct indentation of the remaining lines
-        text = "\n".join(text)
+            if start_sep != end_sep:
+                if end_sep:
+                    start_pos, start_sep = find_chunk_bound(text, start_pos, -1, [end_sep])
+                else:
+                    end_pos, end_sep = find_chunk_bound(text, end_pos, +1, [start_sep])
+
+
+        selection = "%d:%d-%d:%d"%(start_pos, 0, end_pos, len(text[end_pos]))
+
+    # from_row-from_col:to_row-to_col -- all bounds are inclusive!
+    sel_from, sel_to = selection.split("-")
+    sel_from = sel_from.split(":")
+    sel_from = int(sel_from[0]), int(sel_from[1])
+    sel_to = sel_to.split(":")
+    sel_to = int(sel_to[0]), int(sel_to[1])
+    assert sel_from[0] <= sel_to[0]
+
+    if sel_to[1] == 0:   # a:b-c:0 -> a:b-(c-1):-1
+        sel_to = sel_to[0]-1, -1
+
+    text = text[sel_from[0]:(sel_to[0]+1)]
+    text[0] = text[0][sel_from[1]:]
+
+    if sel_from[0] == sel_to[0]: # single text line
+        text[0] = text[0][:(sel_to[1]-sel_from[1])]
+    else:
+        text[-1] = text[-1][:sel_to[1]]
+
+    # remove empty lines from the beginning and the end:
+    while len(text)>0 and text[0].isspace():
+        text.pop(0)
+    while len(text)>0 and text[-1].isspace():
+        text.pop(-1)
+
+    if not text: return ""
+
+    # remove trailing spaces and the leading indentation
+    indent_size = len(text[0])-len(text[0].lstrip(" "))
+    for i in range(len(text)):
+        text[i] = text[i].rstrip()
+        if not text[i]: continue # ignore empty lines
+
+        cur_indent_size = len(text[i])-len(text[i].lstrip(" "))
+        if cur_indent_size < indent_size:
+            indent_size = cur_indent_size
+        if indent_size > 0:
+            text[i] = text[i][indent_size:]
+
+    text = "\n".join(text)
 
     return text
 
@@ -136,26 +176,33 @@ if __name__ == "__main__":
         epilog='Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("cmd", type=str, help="Command to execute, '-' to read from the standard input.")
-    parser.add_argument("--silent", action="store_true",
-                        help="Should the printing of all messages be suppressed.")
+    parser.add_argument("cmd", type=str,
+        help="Command to execute, '-' to read from the standard input.")
+    parser.add_argument("--silent", action="store_true", # store_true->default==False
+        help="Should the printing of all messages be suppressed.")
+    parser.add_argument("--chunk", action="store_true", # store_true->default==False
+        help="Should the the whole code chunk around current cursor "+
+        "be executed if there is no text selection.")
     parser.add_argument("--file", default="", type=str,
-                        help="File path. Ignored unless cmd is '-'.")
+        help="Path to the current file. Currently ignored, but has great potential.")
     parser.add_argument("--cursor", default="0:0", type=str,
-                        help="Cursor position as row:col. Ignored unless cmd is '-'.")
+        help="Cursor position as row:col. Ignored unless cmd is '-'.")
     parser.add_argument("--selection", default=":-:", type=str,
-                        help="Selection position from-to of the form row:col-row:col. Ignored unless cmd is '-'.")
+        help="Selection position from-to of the form row:col-row:col. "+
+        "Ignored unless cmd is '-'. If there is no selection, the whole line "+
+        "or code chunk as indicated by the cursor will be executed")
     parser.add_argument("--port", default=6666, type=int,
             help="TCP port to connect to at the localhost.")
     args = parser.parse_args()
 
     try:
-        text = get_command(args.cmd, args.selection, args.cursor)
+        text = get_command(args.cmd, args.selection, args.cursor, args.chunk)
         text = text.rstrip()
 
         sent_size = write_socket(text, args.port)
         if not args.silent: print("Sent %d bytes."%sent_size)
         sys.exit(0)
+
     except Exception as err:
         if not args.silent: print("Error: %s"%format(err))
         sys.exit(1)

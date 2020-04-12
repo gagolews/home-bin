@@ -36,15 +36,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 TO DO - listener:
-    * help pane at the bottom - react to: ?str.strip help(xxx)
+    * help pane at the bottom - react to: ?str.strip help(xxx) - with tabs
     * Kernel -> New kernel from list...
     * Kernel -> Close tab
     * Allow multiple kernels of the same type (python3_1, python3_2, ...)
+    * Suppress output
+    * Suppress input
+    * Clear last output
+    * code snippets? run script on startup?
+    * object inspector/preview X.e<suggest>
+    * Markdown/HTML support? [bare-bone qtconsole doesn't support this]
+        from IPython.display import display, Markdown, Latex, HTML
+        display(HTML('<strong>aaa!</strong>'))
+        display(Latex(r'\phi'))
+        display(Markdown(r'$b = \frac{\epsilon}{2}$'))
+        display(Math(r'$b = \frac{\epsilon}{2}$')) # this works
+        ---- separate QtWebKit viewer pane? with images, man pages etc.?
+    * Own magics like #% ??? #%clear #%restart
+      #%cd #%pwd
 
 TO DO - sender:
-    * set destination kernel name/number
-
-
+    * set destination kernel name/tab number
+    * Dialogue box: server is not running, do you want to start it from the current working directory?
 """
 
 
@@ -91,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, port, kernel_names, silent):
         super().__init__()
         self.silent = silent
-        self.setWindowTitle("qtconsole_listener")
+        self.setWindowTitle("jupyter-qtconsole-listener")
 
         self.server = QtNetwork.QTcpServer(self)
         if not self.server.listen(QtNetwork.QHostAddress.LocalHost, port):
@@ -188,7 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def about(self):
-        ret = QtWidgets.QMessageBox.about(self, "About qtconsole_listener",
+        ret = QtWidgets.QMessageBox.about(self, "About jupyter-qtconsole-listener",
                 "An application that features a Jupyter-QtConsole " +
                 "and listens for commands to execute on a TCP port.\n\n"
                 "Copyright (C) 2020 Marek Gagolewski\nhttps://www.gagolewski.com\n\n"+
@@ -253,10 +266,11 @@ class MainWindow(QtWidgets.QMainWindow):
             first = True
             for line in code.splitlines():
                 if not first:
+                    cursor.insertText("\n")
                     jw._insert_continuation_prompt(cursor, False)
                 else:
                     first = False
-                cursor.insertText(line+"\n")
+                cursor.insertText(line)
         finally:
             cursor.endEditBlock()
 
