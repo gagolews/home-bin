@@ -35,8 +35,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 """
-TO DO:
+TO DO - listener:
     * help pane at the bottom - react to: ?str.strip help(xxx)
+    * Kernel -> New kernel from list...
+    * Kernel -> Close tab
+    * Allow multiple kernels of the same type (python3_1, python3_2, ...)
+
+TO DO - sender:
+    * set destination kernel name/number
+
 
 """
 
@@ -105,13 +112,15 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Kernels %r started. Listening at port %d."%(kernel_names, port))
 
         file_menu = self.menuBar().addMenu("&File")
-        act = file_menu.addAction("&Quit", self.close, QtGui.QKeySequence.Quit)
+        act = file_menu.addAction("&Quit", self.close) #, QtGui.QKeySequence.Quit)
         file_menu.addAction(act)
 
         kernel_menu = self.menuBar().addMenu("&Kernel")
-        act = kernel_menu.addAction("&Next Tab", self.next_tab, QtGui.QKeySequence.Forward)
+        act = kernel_menu.addAction("&Next Tab", self.next_tab,
+                                    QtGui.QKeySequence("Ctrl+PgDown"))
         kernel_menu.addAction(act)
-        act = kernel_menu.addAction("&Previous Tab", self.previous_tab, QtGui.QKeySequence.Back)
+        act = kernel_menu.addAction("&Previous Tab", self.previous_tab,
+                                    QtGui.QKeySequence("Ctrl+PgUp"))
         kernel_menu.addAction(act)
         act = kernel_menu.addAction("&Clear Outputs", self.clear_output)
         kernel_menu.addAction(act)
