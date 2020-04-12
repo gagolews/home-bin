@@ -193,7 +193,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # expected number of bytes
         text_size = int(socket.readLine().data().decode("utf-8"))
-        assert text_size > 0
+        assert text_size >= 0
+
+        if text_size == 0:
+            # This is a test connection.
+            socket.disconnectFromHost()
+            socket.close()
+            socket = None
+            print("Test connection OK.")
+            return
 
         print("Receiving %d bytes... "%text_size, end="")
         text = QtCore.QByteArray()

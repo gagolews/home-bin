@@ -45,13 +45,62 @@ import argparse
 
 
 
+def get_command(cmd, selection, cursor):
+    if args.cmd != "-":
+        return cmd
+
+    # read from STDIN
+    text = sys.stdin.readlines() # includes the trailing \ns
+
+    if args.selection == ":-:":
+        # nothing selected -- execute the current line
+        cursor = args.cursor.split(":") # row:col
+        cursor = int(cursor[0]), int(cursor[1])
+        text = text[cursor[0]].strip()
+    else:
+        # args.selection is 0-based
+        sel_from, sel_to = args.selection.split("-")
+        sel_from = sel_from.split(":")
+        sel_from = int(sel_from[0]), int(sel_from[1])
+        sel_to = sel_to.split(":")
+        sel_to = int(sel_to[0]), int(sel_to[1])
+
+        indent_size = len(text[sel_from[0]])-len(text[sel_from[0]].lstrip())
+        indent_prefix = text[sel_from[0]][:indent_size]
+
+        if sel_to[1] == 0:   # a:b-c:0 -> a:b-(c-1):-1
+            sel_to = sel_to[0]-1, -1
+
+        text = text[sel_from[0]:(sel_to[0]+1)]
+        text[0] = text[0][sel_from[1]:]
+
+        if sel_from[0] == sel_to[0]: # single text line
+            text[0] = text[0][:(sel_to[1]-sel_from[1])]
+        else:
+            text[-1] = text[-1][:sel_to[1]]
+
+        # remove trailing white-spaces and the leading indentation
+        indent_remove = (indent_size > 0)
+        for i in range(len(text)):
+            if indent_remove and text[i][:indent_size] == indent_prefix:
+                text[i] = text[i][indent_size:]
+            else:
+                # there might be "indent - no indent - indent"
+                # -> make sure you only unindent the first block
+                indent_remove = False
+            text[i] = text[i].rstrip()
+        # correct indentation of the remaining lines
+        text = "\n".join(text)
+
+    return text
+
+
 
 def write_socket(text, port):
     socket = QtNetwork.QTcpSocket()
     socket.connectToHost(QtNetwork.QHostAddress.LocalHost, port)
     if not socket.isValid() or not socket.waitForConnected(-1):
-        raise Exception("Unable connect to a local TCP server at port %d"%port)
-
+        raise Exception("Unable connect to a local TCP server at port %d."%port)
 
     text_bytes = text.encode("utf-8")
     text_size = len(text_bytes)
@@ -64,20 +113,20 @@ def write_socket(text, port):
 
     # send data buffer
 
-
-    cur = 0
-    while cur < text_size:
-        cur_next = min(cur+SOCKET_BUF_SIZE, text_size)
-        cur_n = socket.writeData(text_bytes[cur:])
-        if cur_n < 0 or not socket.waitForBytesWritten(-1):
-            raise Exception("Error sending buffer to socket.")
-        cur += cur_n
-
-    print("Sent %d bytes."%text_size)
+    if text_size > 0:
+        cur = 0
+        while cur < text_size:
+            cur_next = min(cur+SOCKET_BUF_SIZE, text_size)
+            cur_n = socket.writeData(text_bytes[cur:])
+            if cur_n < 0 or not socket.waitForBytesWritten(-1):
+                raise Exception("Error sending buffer to socket.")
+            cur += cur_n
 
     socket.waitForDisconnected(-1)
+
     socket.close()
     socket = None
+    return text_size
 
 
 if __name__ == "__main__":
@@ -88,6 +137,8 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("cmd", type=str, help="Command to execute, '-' to read from the standard input.")
+    parser.add_argument("--silent", action="store_true",
+                        help="Should the printing of all messages be suppressed.")
     parser.add_argument("--file", default="", type=str,
                         help="File path. Ignored unless cmd is '-'.")
     parser.add_argument("--cursor", default="0:0", type=str,
@@ -95,61 +146,16 @@ if __name__ == "__main__":
     parser.add_argument("--selection", default=":-:", type=str,
                         help="Selection position from-to of the form row:col-row:col. Ignored unless cmd is '-'.")
     parser.add_argument("--port", default=6666, type=int,
-            help="TCP port to connect at the localhost.")
+            help="TCP port to connect to at the localhost.")
     args = parser.parse_args()
 
-    if args.cmd == "-":
-        # read from STDIN
-        text = sys.stdin.readlines() # includes the trailing \ns
+    try:
+        text = get_command(args.cmd, args.selection, args.cursor)
+        text = text.rstrip()
 
-        if args.selection == ":-:":
-            # nothing selected -- execute the current line
-            cursor = args.cursor.split(":") # row:col
-            cursor = int(cursor[0]), int(cursor[1])
-            text = text[cursor[0]].strip()
-        else:
-            # args.selection is 0-based
-            sel_from, sel_to = args.selection.split("-")
-            sel_from = sel_from.split(":")
-            sel_from = int(sel_from[0]), int(sel_from[1])
-            sel_to = sel_to.split(":")
-            sel_to = int(sel_to[0]), int(sel_to[1])
-
-            indent_size = len(text[sel_from[0]])-len(text[sel_from[0]].lstrip())
-            indent_prefix = text[sel_from[0]][:indent_size]
-            print(repr(indent_prefix), file=sys.stderr)
-
-            if sel_to[1] == 0:   # a:b-c:0 -> a:b-(c-1):-1
-                sel_to = sel_to[0]-1, -1
-
-            text = text[sel_from[0]:(sel_to[0]+1)]
-            text[0] = text[0][sel_from[1]:]
-
-            if sel_from[0] == sel_to[0]: # single text line
-                text[0] = text[0][:(sel_to[1]-sel_from[1])]
-            else:
-                text[-1] = text[-1][:sel_to[1]]
-
-            # remove trailing white-spaces and the leading indentation
-            indent_remove = (indent_size > 0)
-            for i in range(len(text)):
-                if indent_remove and text[i][:indent_size] == indent_prefix:
-                    text[i] = text[i][indent_size:]
-                else:
-                    # there might be "indent - no indent - indent"
-                    # -> make sure you only unindent the first block
-                    indent_remove = False
-                text[i] = text[i].rstrip()
-            # correct indentation of the remaining lines
-            text = "\n".join(text)
-
-    else:
-        text = args.cmd
-
-    text = text.rstrip()
-    #print(text, file=sys.stderr)
-
-    if not text:
-        print("Command is empty.")
-    else:
-        write_socket(text, args.port)
+        sent_size = write_socket(text, args.port)
+        if not args.silent: print("Sent %d bytes."%sent_size)
+        sys.exit(0)
+    except Exception as err:
+        if not args.silent: print("Error: %s"%format(err))
+        sys.exit(1)
