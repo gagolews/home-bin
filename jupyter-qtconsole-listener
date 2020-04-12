@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 TO DO:
     * help pane at the bottom - react to: ?str.strip help(xxx)
+
 """
 
 
@@ -80,9 +81,9 @@ class RicherJupyterWidget(RichJupyterWidget):
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, port, kernel_names):
+    def __init__(self, port, kernel_names, silent):
         super().__init__()
-
+        self.silent = silent
         self.setWindowTitle("qtconsole_listener")
 
         self.server = QtNetwork.QTcpServer(self)
@@ -100,7 +101,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(self.tabs)
         self.jupyter_widgets[0]._control.setFocus()
-        print("Kernels %r started. Listening at port %d."%(kernel_names, port))
+        if not self.silent:
+            print("Kernels %r started. Listening at port %d."%(kernel_names, port))
 
         file_menu = self.menuBar().addMenu("&File")
         act = file_menu.addAction("&Quit", self.close, QtGui.QKeySequence.Quit)
@@ -172,7 +174,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.jupyter_widgets[i].kernel_client.stop_channels()
             self.jupyter_widgets[i].kernel_manager.shutdown_kernel()
         self.server.close()
-        print("Bye.")
+        if not self.silent:
+            print("Bye.")
 
 
     def about(self):
@@ -200,25 +203,30 @@ class MainWindow(QtWidgets.QMainWindow):
             socket.disconnectFromHost()
             socket.close()
             socket = None
-            print("Test connection OK.")
+            if not self.silent:
+                print("Test connection OK.")
             return
 
-        print("Receiving %d bytes... "%text_size, end="")
+        if not self.silent:
+            print("Receiving %d bytes... "%text_size, end="")
         text = QtCore.QByteArray()
         first = True
         while text.size() != text_size:
             # first batch with no wait, data is pending (I think)
             if not first and not socket.waitForReadyRead(-1):
-                print("Error receiving %d bytes of data. Ignoring this batch."%text_size)
+                if not self.silent:
+                    print("Error receiving %d bytes of data. Ignoring this batch."%text_size)
                 socket.disconnectFromHost()
                 socket.close()
                 return
             buf = socket.readAll()
             text.append(QtCore.QByteArray.fromRawData(buf))
-            print(text.size(), end=", ")
+            if not self.silent:
+                print(text.size(), end=", ")
             first = False
 
-        print("OK, %d bytes received."%text_size)
+        if not self.silent:
+            print("OK, %d bytes received."%text_size)
         socket.disconnectFromHost()
         socket.close()
         socket = None
@@ -261,13 +269,16 @@ if __name__ == "__main__":
     parser.add_argument("kernel", default=['python3', 'ir'], type=str, nargs='*',
         help="The id of an installed kernel, e.g., 'python3' (the default),\
             'bash' or 'ir'.")
+    parser.add_argument("--silent", action="store_true",
+                        help="Should the printing of all messages be suppressed.")
     parser.add_argument("--port", default=6666, type=int,
             help="TCP port the localhost shall listen at.")
+
     args = parser.parse_args()
 
 
     app = QtWidgets.QApplication(sys.argv)
-    window = MainWindow(args.port, args.kernel)
+    window = MainWindow(args.port, args.kernel, args.silent)
     window.show()
     app.aboutToQuit.connect(window.shutdown_kernel)
     app.exec_()
