@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 TO DO - listener:
+    * Alt+1,2,3 - switch to tab #
     * help pane at the bottom - react to: ?str.strip help(xxx) - with tabs
     * Kernel -> New kernel from list...
     * Kernel -> Close tab
@@ -52,8 +53,13 @@ TO DO - listener:
         display(Markdown(r'$b = \frac{\epsilon}{2}$'))
         display(Math(r'$b = \frac{\epsilon}{2}$')) # this works
         ---- separate QtWebKit viewer pane? with images, man pages etc.?
-    * Own magics like #% ??? #%clear #%restart
-      #%cd #%pwd
+    * Own magics
+        #%%silent
+        #%%restart
+        #%%clear
+        #%%cd <directory>
+        #%%cd @ -- script's folder
+        #%%pwd
 
 TO DO - sender:
     * set destination kernel name/tab number
@@ -81,10 +87,14 @@ import argparse
 class RicherJupyterWidget(RichJupyterWidget):
 
     def __init__(self, parent, kernel_name):
-        kernel_manager = QtKernelManager(kernel_name=kernel_name)
+        kernel_manager = QtKernelManager(
+            kernel_name=kernel_name)
+        kernel_manager.stop_restarter()
+        kernel_manager.autorestart = False
+        #kernel_manager._restarter.tome_to_dead
         kernel_manager.start_kernel()
 
-        kernel_client = kernel_manager.client()
+        kernel_client = kernel_manager.client() # creates a new client
         kernel_client.start_channels()
 
         super().__init__(parent)
@@ -94,9 +104,23 @@ class RicherJupyterWidget(RichJupyterWidget):
 
         #self.set_default_style("linux")
         #self.syntax_style = "monokai"
-        self._set_font(QtGui.QFont("Ubuntu Mono", 12))
-        self.confirm_restart = False
+        #self._set_font(QtGui.QFont("Ubuntu Mono", 12))
+        self.confirm_restart = True
 
+
+    def _handle_kernel_died(self, since_last_heartbeat):
+        """
+        Handle the kernel's death (not responding to "heartbeats")
+
+        -- do nothing.
+        """
+        #self.log.warning("kernel died: %s", since_last_heartbeat)
+        #if self.custom_restart:
+        #self.custom_restart_kernel_died.emit(since_last_heartbeat)
+        #else:
+        #    self._kernel_restarted_message(died=True)
+        #    self.reset()
+        pass
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -149,8 +173,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         screen = app.screenAt(self.pos())
         size = screen.availableGeometry()
-        self.resize(size.width()//3, size.height())
-        self.move(2*size.width()//3,0)
+        self.resize(4*size.width()//10, size.height())
+        self.move(6*size.width()//10,0)
 
         #jupyter_widget.clear_output() # current line of output
 
@@ -174,7 +198,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         ret = QtWidgets.QMessageBox.question(self, "Confirm Quit",
-                "Shutdown all kernels and see you later?")
+                "Shutdown all kernels and see you later?",
+                defaultButton=QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             event.accept()
         else:
