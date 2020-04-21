@@ -1,8 +1,11 @@
 #!/usr/bin/python3
+# kate: default-dictionary en_AU; syntax python
 
 """
 An application that features a Jupyter-QtConsole and listens for commands to
 execute on a TCP port.
+
+realise
 
 Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)
 All rights reserved.
@@ -59,10 +62,13 @@ TO DO - listener:
         #%%clear
         #%%cd <directory>
         #%%cd @ -- script's folder
+        #%%cd @/.. -- script's parent folder etc.
         #%%pwd
+        #%%target ipython3:
+        #%%target ipython3:genieclust_testbed
 
 TO DO - sender:
-    * set destination kernel name/tab number
+    * set destination kernel name/tab number [or via magic?]
     * Dialogue box: server is not running, do you want to start it from the current working directory?
 """
 
@@ -88,10 +94,11 @@ class RicherJupyterWidget(RichJupyterWidget):
 
     def __init__(self, parent, kernel_name):
         kernel_manager = QtKernelManager(
-            kernel_name=kernel_name)
-        kernel_manager.stop_restarter()
-        kernel_manager.autorestart = False
-        #kernel_manager._restarter.tome_to_dead
+            kernel_name=kernel_name
+        )
+        #kernel_manager.stop_restarter()
+        #kernel_manager.autorestart = False
+        #kernel_manager._restarter.time_to_dead
         kernel_manager.start_kernel()
 
         kernel_client = kernel_manager.client() # creates a new client
@@ -105,7 +112,9 @@ class RicherJupyterWidget(RichJupyterWidget):
         #self.set_default_style("linux")
         #self.syntax_style = "monokai"
         #self._set_font(QtGui.QFont("Ubuntu Mono", 12))
-        self.confirm_restart = True
+        #self._set_paging("hsplit")
+        self.confirm_restart = False
+
 
 
     def _handle_kernel_died(self, since_last_heartbeat):

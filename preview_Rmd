@@ -103,12 +103,11 @@ class MainWindow(QWidget):
             self.htmlview.setUrl(QUrl.fromLocalFile(self.tmpname))
             self.statusview.setPlainText(ret.stdout.decode())
         else:
-            self.statusview.setHtml("""
-            <html><body>
-            <h1 style='color:red'>Error building %s...</h1>
-            <pre style='color:red'>%s</pre>
-            </body></html>
-        """%(self.filename, ret.stdout.decode()))
+            self.statusview.setPlainText("""\
+Error building %s...
+
+%s
+"""%(self.filename, ret.stdout.decode()))
 
         #.htmlview.page().view().scroll(0, 100)#int(self.lastpos.x()), int(self.lastpos.y()))
 
