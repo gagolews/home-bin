@@ -38,6 +38,7 @@ SOCKET_BUF_SIZE = 2048
 
 import sys
 import os, os.path, tempfile
+import re
 import qtpy
 from qtpy import QtCore
 from qtpy import QtNetwork
@@ -46,18 +47,46 @@ import argparse
 
 
 def find_chunk_bound(text, pos, adv, separators):
-    while 0 <= pos+adv < len(text):
-        line = text[pos+adv].lstrip()
+    # prepare regex matchers
+    regexes = separators.copy()
+    for i in range(len(regexes)):
+        if regexes[i]:
+            regexes[i] = re.compile(regexes[i])
 
-        for sep in separators:
-            if not sep:
-                if not line:
-                    return pos, ""
+    line = text[pos].rstrip()
+    if not line: return pos, 0
+    cur_indent = len(line)-len(line.lstrip())
+
+    while 0 <= pos+adv < len(text):
+        line = text[pos+adv].rstrip()
+        next_indent = len(line)-len(line.lstrip())
+
+        for i in range(len(regexes)):
+            if not regexes[i]:  # empty pattern
+                if line: # non-empty line doesn't serve as a separator here
+                    continue
+
+                if cur_indent == 0: # unindented line separated by an empty line
+                    return pos, i
+
+                # we're at an indented line, and the next line is empty
+                # => only break if the line after is unindented
+                # or it's the end/start of file
+                if not (0 <= pos+2*adv < len(text)):
+                    return pos, i
+
+                next_line = text[pos+2*adv].rstrip()
+                if next_line and len(next_line)-len(next_line.lstrip()) == 0:
+                    return pos, i
             else:
-                if line[:len(sep)] == sep:  # Note that "aa"[:100] == "aa"
-                    return pos, sep
+                if regexes[i].search(line): # there is a match
+                    return pos, i
+
         pos += adv
-    return pos, ""
+        if line: cur_indent = next_indent # only if line is not empty
+
+
+    return pos, 0
 
 
 def get_command(cmd, selection, cursor, chunk):
@@ -76,17 +105,25 @@ def get_command(cmd, selection, cursor, chunk):
             # current line then
             start_pos, end_pos = row, row
         else:
-            # chunks (TODO: currently) are defined as code blocks
-            # separated by either empty lines or leading ```s,
+            # chunks are defined as code blocks
+            # separated by leading ``` or empty lines etc.,
             # whichever comes first.
-            start_pos, start_sep = find_chunk_bound(text, row, -1, ["", "```"])
-            end_pos, end_sep = find_chunk_bound(text, row, +1, ["", "```"])
+            start_separators = ["", r"^```", r"^#\s*```"]
+            end_separators   = ["", r"^```", r"^#\s*```"]
+            start_pos, start_sep_idx = find_chunk_bound(
+                text, row, -1, start_separators)
+            end_pos, end_sep_idx = find_chunk_bound(
+                text, row, +1, end_separators)
 
-            if start_sep != end_sep:
-                if end_sep:
-                    start_pos, start_sep = find_chunk_bound(text, start_pos, -1, [end_sep])
-                else:
-                    end_pos, end_sep = find_chunk_bound(text, end_pos, +1, [start_sep])
+            if start_sep_idx != end_sep_idx:
+                if end_sep_idx != 0: # found block ending char sequence
+                    # -> look for the matching block starting char sequence
+                    start_pos, start_sep_idx = find_chunk_bound(
+                        text, start_pos, -1, [start_separators[end_sep_idx]])
+                else: # found block starting char sequence
+                    # -> look for the matching block ending char sequence
+                    end_pos, end_sep_idx = find_chunk_bound(
+                        text, end_pos, +1, [end_separators[start_sep_idx]])
 
 
         selection = "%d:%d-%d:%d"%(start_pos, 0, end_pos, len(text[end_pos]))

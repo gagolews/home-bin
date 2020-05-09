@@ -43,7 +43,7 @@ TO DO - listener:
     * help pane at the bottom - react to: ?str.strip help(xxx) - with tabs
     * Kernel -> New kernel from list...
     * Kernel -> Close tab
-    * Allow multiple kernels of the same type (python3_1, python3_2, ...)
+    * Allow multiple kernels of the same type (ipython3:1, ipython3:abc, ...)
     * Suppress output
     * Suppress input
     * Clear last output
@@ -56,7 +56,7 @@ TO DO - listener:
         display(Markdown(r'$b = \frac{\epsilon}{2}$'))
         display(Math(r'$b = \frac{\epsilon}{2}$')) # this works
         ---- separate QtWebKit viewer pane? with images, man pages etc.?
-    * Own magics
+    * Own magics/modelines
         #%%silent
         #%%restart
         #%%clear
@@ -64,12 +64,17 @@ TO DO - listener:
         #%%cd @ -- script's folder
         #%%cd @/.. -- script's parent folder etc.
         #%%pwd
-        #%%target ipython3:
+        #%%target ipython3
         #%%target ipython3:genieclust_testbed
-
+    * Bugs:
+        * up arrow history cursor pos
+        * tab completion adds backticks
+        * record stderr?
 TO DO - sender:
     * set destination kernel name/tab number [or via magic?]
     * Dialogue box: server is not running, do you want to start it from the current working directory?
+    * source whole file CTRL+SHIFT+S in kate
+
 """
 
 
@@ -207,7 +212,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         ret = QtWidgets.QMessageBox.question(self, "Confirm Quit",
-                "Shutdown all kernels and see you later?",
+                "Shutdown all kernels and quit?",
                 defaultButton=QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             event.accept()
