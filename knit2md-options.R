@@ -3,10 +3,15 @@
 library("knitr")
 options(encoding="UTF-8")
 opts_chunk$set(
-    dev="png",
-    dpi=150,
+    fig.height=3.5,
+    fig.width=6,
+    dev=c("CairoSVG", "CairoPDF"),
+    out.width=NULL,
+    dpi=300,
     error=FALSE,
-    output_language="md"
+    fig.show="hold",
+    fig.lp='fig:',
+    dev.args=list(pointsize=11)
 )
 
 knit_hooks$set(plot=knitr:::hook_plot_md_pandoc)

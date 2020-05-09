@@ -77,7 +77,12 @@ fi
 
 # else: text/markdown
 
+if [ -z "${MATHJAX_URL+x}" ]; then
+    MATHJAX_URL="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
+fi
 
+
+echo "Using MATHJAX_URL=${MATHJAX_URL}"
 
 pandoc +RTS -K512m -RTS \
     "${mdfile}" \
@@ -86,8 +91,8 @@ pandoc +RTS -K512m -RTS \
     --to html5 \
     --template /home/gagolews/bin/knit2html-template.html \
     --highlight-style tango \
-    --variable 'theme:flatly' \
-    --variable 'mathjax-url:https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' \
+    --variable "theme:flatly" \
+    --variable "mathjax-url:${MATHJAX_URL}" \
     --default-image-extension .svg \
     --email-obfuscation none \
     --number-sections \

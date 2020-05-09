@@ -95,8 +95,11 @@ class MainWindow(QWidget):
         self.statusview.setFontFamily("monospace")
         self.statusview.setPlainText("rendering...")
         ret = subprocess.run(args=["knit2html", self.filename, self.tmpname],
-                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                       check=False)
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            env={**os.environ,
+                 "MATHJAX_URL": "/usr/share/javascript/mathjax/MathJax.js?config=TeX-MML-AM_CHTML"},
+            check=False
+        )
 
         if ret.returncode == 0:
             #h = open(self.tmpname, "r").read()
