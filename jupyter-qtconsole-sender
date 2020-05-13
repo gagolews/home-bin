@@ -237,9 +237,9 @@ if __name__ == "__main__":
         text = text.rstrip()
 
         sent_size = write_socket(text, args.port)
-        if not args.silent: print("Sent %d bytes."%sent_size)
+        if not args.silent: print("Sent %d bytes."%sent_size, file=sys.stderr)
         sys.exit(0)
 
     except Exception as err:
-        if not args.silent: print("Error: %s"%format(err))
+        if not args.silent: print("Error: %s"%format(err), file=sys.stderr)
         sys.exit(1)

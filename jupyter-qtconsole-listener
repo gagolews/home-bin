@@ -5,7 +5,6 @@
 An application that features a Jupyter-QtConsole and listens for commands to
 execute on a TCP port.
 
-realise
 
 Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)
 All rights reserved.
@@ -160,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.tabs)
         self.jupyter_widgets[0]._control.setFocus()
         if not self.silent:
-            print("Kernels %r started. Listening at port %d."%(kernel_names, port))
+            print("Kernels %r started. Listening at port %d."%(kernel_names, port), file=sys.stderr)
 
         file_menu = self.menuBar().addMenu("&File")
         act = file_menu.addAction("&Quit", self.close) #, QtGui.QKeySequence.Quit)
@@ -236,7 +235,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.jupyter_widgets[i].kernel_manager.shutdown_kernel()
         self.server.close()
         if not self.silent:
-            print("Bye.")
+            print("Bye.", file=sys.stderr)
 
 
     def about(self):
@@ -265,29 +264,29 @@ class MainWindow(QtWidgets.QMainWindow):
             socket.close()
             socket = None
             if not self.silent:
-                print("Test connection OK.")
+                print("Test connection OK.", file=sys.stderr)
             return
 
         if not self.silent:
-            print("Receiving %d bytes... "%text_size, end="")
+            print("Receiving %d bytes... "%text_size, end="", file=sys.stderr)
         text = QtCore.QByteArray()
         first = True
         while text.size() != text_size:
             # first batch with no wait, data is pending (I think)
             if not first and not socket.waitForReadyRead(-1):
                 if not self.silent:
-                    print("Error receiving %d bytes of data. Ignoring this batch."%text_size)
+                    print("Error receiving %d bytes of data. Ignoring this batch."%text_size, file=sys.stderr)
                 socket.disconnectFromHost()
                 socket.close()
                 return
             buf = socket.readAll()
             text.append(QtCore.QByteArray.fromRawData(buf))
             if not self.silent:
-                print(text.size(), end=", ")
+                print(text.size(), end=", ", file=sys.stderr)
             first = False
 
         if not self.silent:
-            print("OK, %d bytes received."%text_size)
+            print("OK, %d bytes received."%text_size, file=sys.stderr)
         socket.disconnectFromHost()
         socket.close()
         socket = None

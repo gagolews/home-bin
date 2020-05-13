@@ -30,9 +30,9 @@ if [ ! -f "${1}" ]; then
 fi
 
 if [ -z "${2}" ]; then
-    outfile="$1.mp3"
+    outfile="${1}.mp3" # you can rename the file manually thereafter
 else
     outfile="${2}"
 fi
 
-ffmpeg -i "$1" -codec:a libmp3lame -qscale:a 2 "$outfile"
+ffmpeg -i "${1}" -codec:a libmp3lame -qscale:a 2 "${outfile}"

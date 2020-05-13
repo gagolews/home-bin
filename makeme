@@ -1,0 +1,151 @@
+#!/usr/bin/python3
+# kate: default-dictionary en_AU; syntax python
+
+"""
+Executes a custom build/view/clean command based on a file's extension.
+
+Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+exts = {
+    ".html": [".html"],
+    ".Rmd":  [".Rmd", ".rmd"],
+    ".md":   [".md"],
+    ".tex":  [".tex"],
+}
+
+cmds = {
+    ".tex": {
+        "build": "pdflatex -file-line-error -halt-on-error \
+            -interaction=errorstopmode ${FILE_NAME} && \
+            pdflatex ${FILE_NAME}; \
+            bibtex ${FILE_NAME/%${FILE_EXT}/} && pdflatex ${FILE_NAME}",
+        "view": "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} \
+                        ${FILE_NAME/%${FILE_EXT}/.bbl} \
+                        ${FILE_NAME/%${FILE_EXT}/.blg} \
+                        ${FILE_NAME/%${FILE_EXT}/.log} \
+                        ${FILE_NAME/%${FILE_EXT}/.out} \
+                        ${FILE_NAME/%${FILE_EXT}/.snm} \
+                        ${FILE_NAME/%${FILE_EXT}/.vrb} \
+                        ${FILE_NAME/%${FILE_EXT}/.spl} \
+                        ${FILE_NAME/%${FILE_EXT}/.synctex.gz} \
+                        ",
+    },
+    ".html": {
+        "view": "preview_html ${FILE_NAME}",
+    },
+    ".Rmd": {
+        "view": "preview_Rmd ${FILE_NAME}",
+    },
+    ".md": {
+        "view": "preview_Rmd ${FILE_NAME}",
+    }
+}
+
+
+import subprocess, os, sys, os.path
+import argparse
+
+
+
+def make(cmd, file_name):
+    global exts, cmds
+
+    rev_exts = { ve: k for k, v in exts.items() for ve in v }
+
+    file_path = os.path.abspath(file_name)
+    file_basename = os.path.basename(file_path)
+    file_dirname = os.path.dirname(file_path)
+    _, file_ext = os.path.splitext(file_path)
+
+    cmd_exec = cmds[file_ext][cmd]
+
+
+    if cmd_exec[-1] == "&": # fork
+        subprocess.Popen(args=["bash", "-c", cmd_exec[:-1]],
+            env={
+                "FILE_NAME": file_name,
+                "FILE_PATH": file_path,
+                "FILE_BASENAME": file_basename,
+                "FILE_DIRNAME": file_dirname,
+                "FILE_EXT": file_ext,
+                **os.environ
+            }
+        )
+    else:
+        ret = subprocess.run(args=["bash", "-c", cmd_exec],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            env={
+                "FILE_NAME": file_name,
+                "FILE_PATH": file_path,
+                "FILE_BASENAME": file_basename,
+                "FILE_DIRNAME": file_dirname,
+                "FILE_EXT": file_ext,
+                **os.environ
+            },
+            check=False
+        )
+
+        try:
+            output = ret.stdout.decode().rstrip()
+        except:
+            output = ret.stdout.decode("iso-8859-1").rstrip()
+
+        if ret.returncode != 0:
+            raise Exception(output)
+        else:
+            if output: print(output)
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Executes a custom build/view/clean command based on\
+        a file's extension.",
+        epilog="Copyright (C) 2020 Marek Gagolewski (https://www.gagolewski.com)",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("cmd", type=str,
+        help="Command to execute, e.g., build, clean or view")
+    parser.add_argument("filename", type=str,
+        help="File to be processed")
+    args = parser.parse_args()
+
+    if not os.path.isfile(args.filename):
+        print("File %s does not exist." % args.filename, file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        make(args.cmd, args.filename)
+    except Exception as err:
+        print("--> There were errors. <--", file=sys.stderr)
+        print(format(err), file=sys.stderr)
+        print("--> There were errors. <--", file=sys.stderr)
+        sys.exit(1)
