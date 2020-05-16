@@ -178,6 +178,8 @@ class MainWindow(QtWidgets.QMainWindow):
         kernel_menu.addAction(act)
         act = kernel_menu.addAction("&Restart Kernel", self.restart)
         kernel_menu.addAction(act)
+        act = kernel_menu.addAction("Re&start Kernel and Clear Outputs", self.restart_clear)
+        kernel_menu.addAction(act)
 
         file_menu = self.menuBar().addMenu("&Help")
         act = file_menu.addAction("&About", self.about)
@@ -207,7 +209,13 @@ class MainWindow(QtWidgets.QMainWindow):
             jw = self.jupyter_widgets[self.tabs.currentIndex()]
             jw.request_interrupt_kernel()
             jw.restart_kernel(None, now=False)
+            return True
+        else:
+            return False
 
+    def restart_clear(self):
+        if self.restart():
+            self.clear_output()
 
     def closeEvent(self, event):
         ret = QtWidgets.QMessageBox.question(self, "Confirm Quit",
