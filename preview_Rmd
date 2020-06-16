@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# TODO: Refresh with F5
+
 """
 Preview Rmd/md file with knitr+pandoc and watch the file for changes.
 

@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 exts = {
     ".html": [".html"],
     ".Rmd":  [".Rmd", ".rmd"],
+    ".Rnw":  [".Rnw", ".rnw"],
     ".md":   [".md"],
     ".tex":  [".tex"],
 }
@@ -46,6 +47,20 @@ cmds = {
             -interaction=errorstopmode ${FILE_NAME} && \
             pdflatex ${FILE_NAME}; \
             bibtex ${FILE_NAME/%${FILE_EXT}/} && pdflatex ${FILE_NAME}",
+        "view": "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} \
+                        ${FILE_NAME/%${FILE_EXT}/.bbl} \
+                        ${FILE_NAME/%${FILE_EXT}/.blg} \
+                        ${FILE_NAME/%${FILE_EXT}/.log} \
+                        ${FILE_NAME/%${FILE_EXT}/.out} \
+                        ${FILE_NAME/%${FILE_EXT}/.snm} \
+                        ${FILE_NAME/%${FILE_EXT}/.vrb} \
+                        ${FILE_NAME/%${FILE_EXT}/.spl} \
+                        ${FILE_NAME/%${FILE_EXT}/.synctex.gz} \
+                        ",
+    },
+    ".Rnw": {
+        "build": "Rscript -e \"knitr::knit2pdf('${FILE_NAME}')\"",
         "view": "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} \
                         ${FILE_NAME/%${FILE_EXT}/.bbl} \

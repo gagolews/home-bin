@@ -108,8 +108,8 @@ def get_command(cmd, selection, cursor, chunk):
             # chunks are defined as code blocks
             # separated by leading ``` or empty lines etc.,
             # whichever comes first.
-            start_separators = ["", r"^```", r"^#\s*```"]
-            end_separators   = ["", r"^```", r"^#\s*```"]
+            start_separators = ["", r"^\s*```", r"^#\s*```"]
+            end_separators   = ["", r"^\s*```", r"^#\s*```"]
             start_pos, start_sep_idx = find_chunk_bound(
                 text, row, -1, start_separators)
             end_pos, end_sep_idx = find_chunk_bound(

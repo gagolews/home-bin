@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+set -e
+
+if [ ! -f "${1}" ]; then
+    echo "clipimg2base64 Copyright (C) 2020, Marek Gagolewski, https://www.gagolewski.com"
+    echo "input file does not exist or no input provided"
+    echo "usage: clipimg2base64 infile"
+    exit 1
+fi
+
+base64 --wrap=0 "${1}" | \
+printf 'data:image/png;base64,%s\n' "$(cat)" | \
+fold -b --width=4080 | \
+sed 's/$/\\/' | \
+xclip -i -selection clipboard
