@@ -43,7 +43,7 @@ exts = {
 
 cmds = {
     ".tex": {
-        "build": "pdflatex -file-line-error -halt-on-error \
+        "build": "pdflatex -file-line-error -halt-on-error -shell-escape \
             -interaction=errorstopmode ${FILE_NAME} && \
             pdflatex ${FILE_NAME}; \
             bibtex ${FILE_NAME/%${FILE_EXT}/} && pdflatex ${FILE_NAME}",
