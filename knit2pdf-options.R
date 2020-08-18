@@ -1,4 +1,4 @@
-# Copyright (C) 2020, Marek Gagolewski, https://www.gagolewski.com
+# Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>
 
 library("knitr")
 options(encoding="UTF-8")
