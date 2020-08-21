@@ -2,7 +2,7 @@
 
 
 """
-Send to a TCP port the commands execute on a Jupyter-QtConsole.
+Send to a TCP port the commands to be executed on a Jupyter-QtConsole.
 
 # ############################################################################ #
 #                                                                              #
@@ -197,28 +197,34 @@ def write_socket(text, port):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Send to a TCP port the commands execute\
-        on a Jupyter-QtConsole',
-        epilog='Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>',
+        description="Send to a TCP port the commands to be executed "
+        "on a Jupyter-QtConsole",
+        epilog="Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("cmd", type=str,
+    parser.add_argument(
+        "cmd", type=str,
         help="Command to execute, '-' to read from the standard input.")
-    parser.add_argument("--silent", action="store_true", # store_true->default==False
+    parser.add_argument(
+        "--silent", action="store_true", # store_true->default==False
         help="Should the printing of all messages be suppressed.")
-    parser.add_argument("--chunk", action="store_true", # store_true->default==False
+    parser.add_argument(
+        "--chunk", action="store_true", # store_true->default==False
         help="Should the the whole code chunk around current cursor "+
         "be executed if there is no text selection.")
-    parser.add_argument("--file", default="", type=str,
+    parser.add_argument(
+        "--file", default="", type=str,
         help="Path to the current file. Currently ignored, but has great potential.")
-    parser.add_argument("--cursor", default="0:0", type=str,
+    parser.add_argument(
+        "--cursor", default="0:0", type=str,
         help="Cursor position as row:col. Ignored unless cmd is '-'.")
     parser.add_argument("--selection", default=":-:", type=str,
-        help="Selection position from-to of the form row:col-row:col. "+
-        "Ignored unless cmd is '-'. If there is no selection, the whole line "+
-        "or code chunk as indicated by the cursor will be executed")
-    parser.add_argument("--port", default=6666, type=int,
-            help="TCP port to connect to at the localhost.")
+        help="Selection position from-to of the form row:col-row:col. "
+        "Ignored unless `cmd` is '-'. If there is no selection, the whole line "
+        "or code chunk as indicated by the cursor position will be executed")
+    parser.add_argument(
+        "--port", default=6666, type=int,
+        help="TCP port to connect to at the localhost.")
     args = parser.parse_args()
 
     try:
@@ -226,7 +232,7 @@ if __name__ == "__main__":
         text = text.rstrip()
 
         sent_size = write_socket(text, args.port)
-        if not args.silent: print("Sent %d bytes."%sent_size, file=sys.stderr)
+        if not args.silent: print("%d bytes sent."%sent_size, file=sys.stderr)
         sys.exit(0)
 
     except Exception as err:

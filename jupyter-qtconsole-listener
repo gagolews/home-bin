@@ -3,7 +3,7 @@
 
 """
 An application that features a Jupyter-QtConsole and listens for commands to
-execute on a TCP port.
+be executed on a TCP port.
 
 # ############################################################################ #
 #                                                                              #
@@ -57,6 +57,7 @@ TO DO - listener:
         * up arrow history cursor pos
         * tab completion adds backticks
         * record stderr?
+    * Print working directory in the status bar or wherever, after each cmd exec
 TO DO - sender:
     * set destination kernel name/tab number [or via magic?]
     * Dialogue box: server is not running, do you want to start it from the current working directory?
@@ -318,18 +319,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='An application that features a Jupyter-QtConsole\
-        and listens for commands to execute on a TCP port.',
-        epilog='Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>',
+        description="An application that features a Jupyter-QtConsole "
+        "and listens for commands to be executed on a TCP port.",
+        epilog="Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("kernel", default=['python3', 'ir'], type=str, nargs='*',
-        help="The id of an installed kernel, e.g., 'python3' (the default),\
-            'bash' or 'ir'.")
-    parser.add_argument("--silent", action="store_true",
-                        help="Should the printing of all messages be suppressed.")
-    parser.add_argument("--port", default=6666, type=int,
-            help="TCP port the localhost shall listen at.")
+    parser.add_argument(
+        "kernel", default=['python3', 'ir', 'bash'], type=str, nargs='*',
+        help="The ID of an installed kernel, e.g., 'python3' (the default), "
+             "'bash' or 'ir'.")
+    parser.add_argument(
+        "--silent", action="store_true",
+        help="Should the printing of all messages be suppressed.")
+    parser.add_argument(
+        "--port", default=6666, type=int,
+        help="TCP port the localhost shall listen at.")
 
     args = parser.parse_args()
 
