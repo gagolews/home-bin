@@ -4,23 +4,32 @@
 """
 Executes a custom build/view/clean command based on a file's extension.
 
-# ############################################################################ #
-#                                                                              #
-#   Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>           #
-#                                                                              #
-#                                                                              #
-#   This program is free software: you can redistribute it and/or modify       #
-#   it under the terms of the GNU Affero General Public License                #
-#   Version 3, 19 November 2007, published by the Free Software Foundation.    #
-#   This program is distributed in the hope that it will be useful,            #
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of             #
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               #
-#   GNU Affero General Public License Version 3 for more details.              #
-#   You should have received a copy of the License along with this program.    #
-#   If this is not the case, refer to <https://www.gnu.org/licenses/>.         #
-#                                                                              #
-# ############################################################################ #
+# ########################################################################## #
+#                                                                            #
+#   Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>         #
+#                                                                            #
+#                                                                            #
+#   This program is free software: you can redistribute it and/or modify     #
+#   it under the terms of the GNU Affero General Public License              #
+#   Version 3, 19 November 2007, published by the Free Software Foundation.  #
+#   This program is distributed in the hope that it will be useful,          #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of           #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the             #
+#   GNU Affero General Public License Version 3 for more details.            #
+#   You should have received a copy of the License along with this program.  #
+#   If this is not the case, refer to <https://www.gnu.org/licenses/>.       #
+#                                                                            #
+# ########################################################################## #
 """
+
+# TODO: per-project build - look for ..what?.. Makefile in the file's dir
+# or its parent folders?
+
+import subprocess
+import os
+import sys
+import os.path
+import argparse
 
 exts = {
     ".html": [".html"],
@@ -32,51 +41,52 @@ exts = {
 
 cmds = {
     ".tex": {
-        "build": "pdflatex -file-line-error -halt-on-error -shell-escape \
-            -interaction=errorstopmode ${FILE_NAME} && \
-            pdflatex  -shell-escape ${FILE_NAME}; \
-            bibtex ${FILE_NAME/%${FILE_EXT}/} && pdflatex  -shell-escape ${FILE_NAME}",
-        "view": "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
-        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} \
-                        ${FILE_NAME/%${FILE_EXT}/.bbl} \
-                        ${FILE_NAME/%${FILE_EXT}/.blg} \
-                        ${FILE_NAME/%${FILE_EXT}/.log} \
-                        ${FILE_NAME/%${FILE_EXT}/.out} \
-                        ${FILE_NAME/%${FILE_EXT}/.snm} \
-                        ${FILE_NAME/%${FILE_EXT}/.vrb} \
-                        ${FILE_NAME/%${FILE_EXT}/.spl} \
-                        ${FILE_NAME/%${FILE_EXT}/.synctex.gz} \
-                        ",
+        "build": "pdflatex -file-line-error -halt-on-error -shell-escape "
+                 "-interaction=errorstopmode ${FILE_NAME} && "
+                 "pdflatex  -shell-escape ${FILE_NAME}; "
+                 "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
+                 "pdflatex  -shell-escape ${FILE_NAME}",
+        "view":  "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
+                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
+                 "${FILE_NAME/%${FILE_EXT}/.blg} "
+                 "${FILE_NAME/%${FILE_EXT}/.log} "
+                 "${FILE_NAME/%${FILE_EXT}/.out} "
+                 "${FILE_NAME/%${FILE_EXT}/.snm} "
+                 "${FILE_NAME/%${FILE_EXT}/.vrb} "
+                 "${FILE_NAME/%${FILE_EXT}/.toc} "
+                 "${FILE_NAME/%${FILE_EXT}/.tpt} "
+                 "${FILE_NAME/%${FILE_EXT}/.spl} "
+                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
     },
     ".Rnw": {
-        "build": "Rscript -e \"knitr::knit2pdf('${FILE_NAME}', quiet=TRUE)\"",
-        "view": "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
-        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} \
-                        ${FILE_NAME/%${FILE_EXT}/.bbl} \
-                        ${FILE_NAME/%${FILE_EXT}/.blg} \
-                        ${FILE_NAME/%${FILE_EXT}/.log} \
-                        ${FILE_NAME/%${FILE_EXT}/.out} \
-                        ${FILE_NAME/%${FILE_EXT}/.snm} \
-                        ${FILE_NAME/%${FILE_EXT}/.vrb} \
-                        ${FILE_NAME/%${FILE_EXT}/.spl} \
-                        ${FILE_NAME/%${FILE_EXT}/.synctex.gz} \
-                        ",
+        "build": "Rscript -e \""
+                 "knitr::knit2pdf('${FILE_NAME}', quiet=TRUE, "
+                 "compiler = 'xelatex')"
+                 "\"",
+        "view":  "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
+                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
+                 "${FILE_NAME/%${FILE_EXT}/.blg} "
+                 "${FILE_NAME/%${FILE_EXT}/.log} "
+                 "${FILE_NAME/%${FILE_EXT}/.out} "
+                 "${FILE_NAME/%${FILE_EXT}/.snm} "
+                 "${FILE_NAME/%${FILE_EXT}/.vrb} "
+                 "${FILE_NAME/%${FILE_EXT}/.toc} "
+                 "${FILE_NAME/%${FILE_EXT}/.tpt} "
+                 "${FILE_NAME/%${FILE_EXT}/.spl} "
+                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
     },
     ".html": {
-        "view": "preview_html ${FILE_NAME}",
+        "view":  "preview_html ${FILE_NAME}",
     },
     ".Rmd": {
-        "view": "preview_Rmd ${FILE_NAME}",
+        "view":  "preview_Rmd ${FILE_NAME}",
     },
     ".md": {
-        "view": "preview_Rmd ${FILE_NAME}",
+        "view":  "preview_Rmd ${FILE_NAME}",
     }
 }
-
-
-import subprocess, os, sys, os.path
-import argparse
-
 
 
 def make(cmd, file_name):
