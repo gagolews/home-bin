@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# ############################################################################ #
+#                                                                              #
+#   Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>           #
+#                                                                              #
+#                                                                              #
+#   This program is free software: you can redistribute it and/or modify       #
+#   it under the terms of the GNU Affero General Public License                #
+#   Version 3, 19 November 2007, published by the Free Software Foundation.    #
+#   This program is distributed in the hope that it will be useful,            #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               #
+#   GNU Affero General Public License Version 3 for more details.              #
+#   You should have received a copy of the License along with this program.    #
+#   If this is not the case, refer to <https://www.gnu.org/licenses/>.         #
+#                                                                              #
+# ############################################################################ #
+
+
+
+
+set -e
+
+if [ -z "${1}" ]; then
+    echo "usage: ${0} input.md [outfile.html]"
+    exit 1
+fi
+
+infile="$1"
+
+if [ -z "${2}" ]; then
+    outfile="${1/%.md/.html}"
+else
+    outfile="$2"
+fi
+
+
+echo "${0}: converting ${infile} → ${outfile}"
+
+pandoc $infile -o $outfile \
+    --standalone \
+    -t revealjs \
+    -V revealjs-url=https://cdn.jsdelivr.net/npm/reveal.js@3.9.2 \
+    --incremental \
+    --katex=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/ \
+    -V theme=beige

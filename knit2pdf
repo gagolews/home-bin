@@ -45,7 +45,7 @@ mdfile="${1/%.pdf/}-tmp-pdf.md"
 rm -f "${mdfile/%.md/.tex}"
 rm -f "${mdfile}"
 
-echo "Compiling ${1} → ${outfile}..."
+echo "{$0}: converting ${1} → ${outfile}"
 
 if [ $mimeinput == "text/x-r-markdown" ]; then
     mkdir -p "${tmpdir}"
@@ -123,5 +123,3 @@ if [ "$keepsources" = false ]; then
         rm -f "${mdfile}"
     fi
 fi
-
-echo "Finished compiling ${1} → ${outfile}. OK."

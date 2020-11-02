@@ -23,7 +23,7 @@ set -e
 if [ ! -f "${1}" ]; then
     echo "knit2md Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>"
     echo "input file does not exist or no input provided"
-    echo "usage: knit2md infile [outfile]"
+    echo "usage: ${0} infile [outfile]"
     exit 1
 fi
 
@@ -44,7 +44,7 @@ if [ $mimeinput == "text/x-r-markdown" ]; then
     fi
 
 
-    echo "Compiling ${1} → ${outfile}..."
+    echo "{$0}: converting ${1} → ${outfile}"
 
     rm -f "${knitrfile}"
     rm -f "${mdfile}"
@@ -85,5 +85,3 @@ Rscript --vanilla -e "\
 
 rm -f "${knitrfile}"
 rm -f "${mdfile}"
-
-echo "Finished compiling ${1} → ${outfile}. OK."

@@ -43,7 +43,7 @@ mdfile="${1/%.Rmd/}-tmp-html.md"
 #rm -f "${outfile}"
 rm -f "${mdfile}"
 
-echo "Compiling ${1} → ${outfile}..."
+echo "{$0}: converting ${1} → ${outfile}"
 
 if [ $mimeinput == "text/x-r-markdown" ]; then
     mkdir -p "${tmpdir}"
@@ -114,5 +114,3 @@ if [ "$keepsources" = false ]; then
         rm -f "${mdfile}"
     fi
 fi
-
-echo "Finished compiling ${1} → ${outfile}. OK."

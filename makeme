@@ -30,6 +30,7 @@ import os
 import sys
 import os.path
 import argparse
+import json
 
 exts = {
     ".html": [".html"],
