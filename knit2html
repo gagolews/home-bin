@@ -29,7 +29,6 @@ fi
 
 keepsources=false
 
-mimeinput=`mimetype -b "${1}"`
 
 if [ -z "${2}" ]; then
     outfile="${1/%.Rmd/.html}"
@@ -43,32 +42,33 @@ mdfile="${1/%.Rmd/}-tmp-html.md"
 #rm -f "${outfile}"
 rm -f "${mdfile}"
 
-echo "{$0}: converting ${1} → ${outfile}"
+echo "${0}: converting ${1} → ${outfile}"
 
-if [ $mimeinput == "text/x-r-markdown" ]; then
-    mkdir -p "${tmpdir}"
-    rm -f "${knitrfile}"
+# mimeinput=`mimetype -b "${1}"`
+# if [ $mimeinput == "text/x-r-markdown" ]; then
+mkdir -p "${tmpdir}"
+rm -f "${knitrfile}"
 
-    echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
-    cat /home/gagolews/bin/knit2html-options.R >> "${knitrfile}"
-    echo "\`\`\`" >> "${knitrfile}"
-    echo "" >> "${knitrfile}"
-    cat "${1}" >> "${knitrfile}"
-    #sed -e 's@^---$@<p></p>@g' "${1}" >> "${knitrfile}"
+echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+cat /home/gagolews/bin/knit2html-options.R >> "${knitrfile}"
+echo "\`\`\`" >> "${knitrfile}"
+echo "" >> "${knitrfile}"
+cat "${1}" >> "${knitrfile}"
+#sed -e 's@^---$@<p></p>@g' "${1}" >> "${knitrfile}"
 
 
-    Rscript -e "\
-        library('knitr');                              \
-        opts_knit\$set(progress=FALSE, verbose=TRUE); \
-        opts_chunk\$set(                               \
-            cache.path='${tmpdir}/cache/',    \
-            fig.path='${tmpdir}/figures/'     \
-        );                                             \
-        knit('${knitrfile}', '${mdfile}')
-    "
-else
-    cp "${1}" "${mdfile}"
-fi
+Rscript -e "\
+    library('knitr');                              \
+    opts_knit\$set(progress=FALSE, verbose=TRUE); \
+    opts_chunk\$set(                               \
+        cache.path='${tmpdir}/cache/',    \
+        fig.path='${tmpdir}/figures/'     \
+    );                                             \
+    knit('${knitrfile}', '${mdfile}')
+"
+# else
+#     cp "${1}" "${mdfile}"
+# fi
 
 
 # else: text/markdown

@@ -30,7 +30,7 @@ import os
 import sys
 import os.path
 import argparse
-import json
+import yaml
 
 exts = {
     ".html": [".html"],
@@ -82,12 +82,33 @@ cmds = {
         "view":  "preview_html ${FILE_NAME}",
     },
     ".Rmd": {
+        "_yaml": True,
         "view":  "preview_Rmd ${FILE_NAME}",
     },
     ".md": {
+        "_yaml": True,
         "view":  "preview_Rmd ${FILE_NAME}",
     }
 }
+
+
+def try_yaml(cmd, file_name):
+    # read a YAML block
+    with open(file_name, "r") as f:
+        if f.readline().rstrip() != "---":
+            return None
+
+        yaml_block = []
+        while True:
+            line = f.readline().rstrip()
+            if line == "---": break
+            yaml_block.append(line)
+
+        yaml_block = "\n".join(yaml_block)
+        yaml_block = yaml.safe_load(yaml_block)
+        if "makeme" not in yaml_block:
+            return None
+        return yaml_block["makeme"].get(cmd, None)
 
 
 def make(cmd, file_name):
@@ -100,8 +121,13 @@ def make(cmd, file_name):
     file_dirname = os.path.dirname(file_path)
     _, file_ext = os.path.splitext(file_path)
 
-    cmd_exec = cmds[file_ext][cmd]
+    cmd_exec = None
+    if cmds[file_ext].get("_yaml", False):
+        cmd_exec = try_yaml(cmd, file_name)
+    if not cmd_exec:
+        cmd_exec = cmds[file_ext][cmd]
 
+    print(cmd_exec, file=sys.stderr)
 
     if cmd_exec[-1] == "&": # fork
         subprocess.Popen(args=["bash", "-c", cmd_exec[:-1]],
@@ -142,8 +168,8 @@ def make(cmd, file_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Executes a custom build/view/clean command based on\
-        a file's extension.",
+        description="Executes a custom build/view/clean command based on "
+        "a file's extension.",
         epilog="Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )

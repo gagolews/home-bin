@@ -29,49 +29,48 @@ fi
 
 keepsources=false
 
-mimeinput=`mimetype -b "${1}"`
+#mimeinput=`mimetype -b "${1}"`
+#if [ $mimeinput == "text/x-r-markdown" ]; then
+figuresdir="${1/%.Rmd/}-figures"
 
-if [ $mimeinput == "text/x-r-markdown" ]; then
-    figuresdir="${1/%.Rmd/}-figures"
+knitrfile="${1/%.Rmd/}-tmp-md.Rmd"
+mdfile="${1/%.Rmd/}-tmp-md.md"
 
-    knitrfile="${1/%.Rmd/}-tmp-md.Rmd"
-    mdfile="${1/%.Rmd/}-tmp-md.md"
-
-    if [ -z "${2}" ]; then
-        outfile="${1/%.Rmd/.md}"
-    else
-        outfile="${2}"
-    fi
-
-
-    echo "{$0}: converting ${1} → ${outfile}"
-
-    rm -f "${knitrfile}"
-    rm -f "${mdfile}"
-    #rm -f "${outfile}"
-    mkdir -p "${figuresdir}"
-    rm -f "{$figuresdir}/*"
-
-
-    echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
-    cat /home/gagolews/bin/knit2md-options.R >> "${knitrfile}"
-    echo "\`\`\`" >> "${knitrfile}"
-    echo "" >> "${knitrfile}"
-    cat "${1}" >> "${knitrfile}"
-    #sed -e 's@^---$@<p></p>@g' "${1}" >> "${knitrfile}"
-
-
-    Rscript --vanilla -e "\
-        library('knitr');                              \
-        opts_knit\$set(progress=FALSE, verbose=TRUE); \
-        opts_chunk\$set(
-            fig.path='${figuresdir}/'     \
-        );                                             \
-        knit('${knitrfile}', '${mdfile}')
-    "
+if [ -z "${2}" ]; then
+    outfile="${1/%.Rmd/.md}"
 else
-    exit 1
+    outfile="${2}"
 fi
+
+
+echo "${0}: converting ${1} → ${outfile}"
+
+rm -f "${knitrfile}"
+rm -f "${mdfile}"
+#rm -f "${outfile}"
+mkdir -p "${figuresdir}"
+rm -f "{$figuresdir}/*"
+
+
+echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+cat /home/gagolews/bin/knit2md-options.R >> "${knitrfile}"
+echo "\`\`\`" >> "${knitrfile}"
+echo "" >> "${knitrfile}"
+cat "${1}" >> "${knitrfile}"
+#sed -e 's@^---$@<p></p>@g' "${1}" >> "${knitrfile}"
+
+
+Rscript --vanilla -e "\
+    library('knitr');                              \
+    opts_knit\$set(progress=FALSE, verbose=TRUE); \
+    opts_chunk\$set(
+        fig.path='${figuresdir}/'     \
+    );                                             \
+    knit('${knitrfile}', '${mdfile}')
+"
+#else
+#    exit 1
+#fi
 
 
 
