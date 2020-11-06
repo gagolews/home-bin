@@ -101,7 +101,7 @@ pandoc +RTS -K512m -RTS \
     #--default-image-extension .svg \
 
 
-if [ "$keepsources" = false ]; then
+if [ "$keepsources" == false ]; then
     if [ $mimeinput == "text/x-r-markdown" ]; then
         rm -f "${knitrfile}"
         rm -f "${mdfile}"

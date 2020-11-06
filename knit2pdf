@@ -108,7 +108,7 @@ rm -f "${mdfile/%.md/.aux}" "${mdfile/%.md/.log}" "${mdfile/%.md/.nav}" \
 
 
 
-if [ "$keepsources" = false ]; then
+if [ "$keepsources" == false ]; then
     if [ $mimeinput == "text/x-r-markdown" ]; then
         rm -f "${knitrfile}"
         rm -f "${mdfile/%.md/.tex}"
