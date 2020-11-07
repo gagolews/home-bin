@@ -38,10 +38,13 @@ exts = {
     ".Rnw":  [".Rnw", ".rnw"],
     ".md":   [".md"],
     ".tex":  [".tex"],
+    ".py":   [".py"],
+    ".R":    [".R", ".r"]
 }
 
 cmds = {
     ".tex": {
+        "_comment_percent": True,
         "build": "pdflatex -file-line-error -halt-on-error -shell-escape "
                  "-interaction=errorstopmode ${FILE_NAME} && "
                  "pdflatex  -shell-escape ${FILE_NAME}; "
@@ -61,6 +64,7 @@ cmds = {
                  "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
     },
     ".Rnw": {
+        "_comment_percent": True,
         "build": "Rscript -e \""
                  "knitr::knit2pdf('${FILE_NAME}', quiet=TRUE, "
                  "compiler = 'xelatex')"
@@ -88,7 +92,13 @@ cmds = {
     ".md": {
         "_yaml": True,
         "view":  "preview_Rmd ${FILE_NAME}",
-    }
+    },
+    ".py": {
+        "_comment_hash": True,
+    },
+    ".R": {
+        "_comment_hash": True,
+    },
 }
 
 
@@ -111,6 +121,24 @@ def try_yaml(cmd, file_name):
         return yaml_block["makeme"].get(cmd, None)
 
 
+def try_comment(cmd, file_name, comment_char):
+    # read a YAML block
+    with open(file_name, "r") as f:
+        comment_block = []
+        while True:
+            line = f.readline().strip()
+            if not line.startswith(comment_char): break
+            if line.startswith(comment_char+" "):
+                comment_block.append(line[(len(comment_char)+1):])
+
+        #print(comment_block, file=sys.stderr)
+        comment_block = "\n".join(comment_block)
+        comment_block = yaml.safe_load(comment_block)
+        if "makeme" not in comment_block:
+            return None
+        return comment_block["makeme"].get(cmd, None)
+
+
 def make(cmd, file_name):
     global exts, cmds
 
@@ -124,10 +152,14 @@ def make(cmd, file_name):
     cmd_exec = None
     if cmds[file_ext].get("_yaml", False):
         cmd_exec = try_yaml(cmd, file_name)
+    if not cmd_exec and cmds[file_ext].get("_comment_hash", False):
+        cmd_exec = try_comment(cmd, file_name, "#")
+    if not cmd_exec and cmds[file_ext].get("_comment_percent", False):
+        cmd_exec = try_comment(cmd, file_name, "%")
     if not cmd_exec:
         cmd_exec = cmds[file_ext][cmd]
 
-    print(cmd_exec, file=sys.stderr)
+    #print(cmd_exec, file=sys.stderr)
 
     if cmd_exec[-1] == "&": # fork
         subprocess.Popen(args=["bash", "-c", cmd_exec[:-1]],
