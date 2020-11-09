@@ -204,7 +204,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "cmd", type=str,
-        help="Command to execute, '-' to read from the standard input.")
+        help="Command or file name (if --file is passed) to execute; "+
+        "'-' to read from the standard input.")
     parser.add_argument(
         "--silent", action="store_true", # store_true->default==False
         help="Should the printing of all messages be suppressed.")
@@ -213,8 +214,8 @@ if __name__ == "__main__":
         help="Should the the whole code chunk around current cursor "+
         "be executed if there is no text selection.")
     parser.add_argument(
-        "--file", default="", type=str,
-        help="Path to the current file. Currently ignored, but has great potential.")
+        "--file", action="store_true", # store_true->default==False
+        help="Path to the file to execute. If set, ignores `cursor`, `selection`, and `chunk`")
     parser.add_argument(
         "--cursor", default="0:0", type=str,
         help="Cursor position as row:col. Ignored unless cmd is '-'.")
@@ -228,7 +229,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        text = get_command(args.cmd, args.selection, args.cursor, args.chunk)
+        if args.file:
+            with open(args.cmd, "r") as f:
+                text = f.readlines()
+                text = "".join(text)
+        else:
+            text = get_command(args.cmd, args.selection, args.cursor, args.chunk)
+
         text = text.rstrip()
 
         sent_size = write_socket(text, args.port)
