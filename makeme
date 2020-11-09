@@ -131,6 +131,9 @@ def try_comment(cmd, file_name, comment_char):
             if line.startswith(comment_char+" "):
                 comment_block.append(line[(len(comment_char)+1):])
 
+        if len(comment_block) == 0:
+            return None
+
         #print(comment_block, file=sys.stderr)
         comment_block = "\n".join(comment_block)
         comment_block = yaml.safe_load(comment_block)
