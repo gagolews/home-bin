@@ -22,9 +22,6 @@ Executes a custom build/view/clean command based on a file's extension.
 # ########################################################################## #
 """
 
-# TODO: per-project build - look for ..what?.. Makefile in the file's dir
-# or its parent folders?
-
 import subprocess
 import os
 import sys
@@ -32,18 +29,20 @@ import os.path
 import argparse
 import yaml
 
+
 exts = {
-    ".html": [".html"],
-    ".Rmd":  [".Rmd", ".rmd"],
-    ".Rnw":  [".Rnw", ".rnw"],
-    ".md":   [".md"],
-    ".tex":  [".tex"],
-    ".py":   [".py"],
-    ".R":    [".R", ".r"]
+    "html": [".html"],
+    "Rmd":  [".Rmd", ".rmd"],
+    "Rnw":  [".Rnw", ".rnw"],
+    "md":   [".md"],
+    "tex":  [".tex"],
+    "py":   [".py"],
+    "R":    [".R", ".r"]
 }
 
+
 cmds = {
-    ".tex": {
+    "tex": {
         "_comment_percent": True,
         "build": "pdflatex -file-line-error -halt-on-error -shell-escape "
                  "-interaction=errorstopmode ${FILE_NAME} && "
@@ -63,7 +62,7 @@ cmds = {
                  "${FILE_NAME/%${FILE_EXT}/.spl} "
                  "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
     },
-    ".Rnw": {
+    "Rnw": {
         "_comment_percent": True,
         "build": "Rscript -e \""
                  "knitr::knit2pdf('${FILE_NAME}', quiet=TRUE, "
@@ -82,21 +81,21 @@ cmds = {
                  "${FILE_NAME/%${FILE_EXT}/.spl} "
                  "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
     },
-    ".html": {
+    "html": {
         "view":  "preview_html ${FILE_NAME}",
     },
-    ".Rmd": {
+    "Rmd": {
         "_yaml": True,
         "view":  "preview_Rmd ${FILE_NAME}",
     },
-    ".md": {
+    "md": {
         "_yaml": True,
         "view":  "preview_Rmd ${FILE_NAME}",
     },
-    ".py": {
+    "py": {
         "_comment_hash": True,
     },
-    ".R": {
+    "R": {
         "_comment_hash": True,
     },
 }
@@ -152,6 +151,11 @@ def make(cmd, file_name):
     file_dirname = os.path.dirname(file_path)
     _, file_ext = os.path.splitext(file_path)
 
+    file_ext = rev_exts[file_ext]
+
+    if file_ext not in cmds:
+        raise Exception("file_ext not in cmds")
+
     cmd_exec = None
     if cmds[file_ext].get("_yaml", False):
         cmd_exec = try_yaml(cmd, file_name)
@@ -160,6 +164,8 @@ def make(cmd, file_name):
     if not cmd_exec and cmds[file_ext].get("_comment_percent", False):
         cmd_exec = try_comment(cmd, file_name, "%")
     if not cmd_exec:
+        if cmd not in cmds[file_ext]:
+            raise Exception("cmd not in cmds[file_ext]")
         cmd_exec = cmds[file_ext][cmd]
 
     #print(cmd_exec, file=sys.stderr)
@@ -213,6 +219,17 @@ if __name__ == "__main__":
     parser.add_argument("filename", type=str,
         help="File to be processed")
     args = parser.parse_args()
+
+
+    # load custom config in .makeme (if exists)
+    if os.path.isfile(".makeme"):
+        with open(".makeme", "r") as f:
+            custom_config = "".join(f.readlines())
+        custom_config = yaml.safe_load(custom_config)
+        for _ext in custom_config:
+            for _cmd, _action in custom_config[_ext].items():
+                cmds[_ext][_cmd] = _action
+
 
     if not os.path.isfile(args.filename):
         print("File %s does not exist." % args.filename, file=sys.stderr)
