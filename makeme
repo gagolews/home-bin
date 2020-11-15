@@ -60,7 +60,7 @@ cmds = {
                  "${FILE_NAME/%${FILE_EXT}/.toc} "
                  "${FILE_NAME/%${FILE_EXT}/.tpt} "
                  "${FILE_NAME/%${FILE_EXT}/.spl} "
-                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
+                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
     },
     "Rnw": {
         "_comment_percent": True,
@@ -79,7 +79,7 @@ cmds = {
                  "${FILE_NAME/%${FILE_EXT}/.toc} "
                  "${FILE_NAME/%${FILE_EXT}/.tpt} "
                  "${FILE_NAME/%${FILE_EXT}/.spl} "
-                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz}",
+                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
     },
     "html": {
         "view":  "preview_html ${FILE_NAME}",
@@ -151,22 +151,22 @@ def make(cmd, file_name):
     file_dirname = os.path.dirname(file_path)
     _, file_ext = os.path.splitext(file_path)
 
-    file_ext = rev_exts[file_ext]
+    file_ext_lookup = rev_exts[file_ext]
 
-    if file_ext not in cmds:
-        raise Exception("file_ext not in cmds")
+    if file_ext_lookup not in cmds:
+        raise Exception("file_ext_lookup not in cmds")
 
     cmd_exec = None
-    if cmds[file_ext].get("_yaml", False):
+    if cmds[file_ext_lookup].get("_yaml", False):
         cmd_exec = try_yaml(cmd, file_name)
-    if not cmd_exec and cmds[file_ext].get("_comment_hash", False):
+    if not cmd_exec and cmds[file_ext_lookup].get("_comment_hash", False):
         cmd_exec = try_comment(cmd, file_name, "#")
-    if not cmd_exec and cmds[file_ext].get("_comment_percent", False):
+    if not cmd_exec and cmds[file_ext_lookup].get("_comment_percent", False):
         cmd_exec = try_comment(cmd, file_name, "%")
     if not cmd_exec:
-        if cmd not in cmds[file_ext]:
-            raise Exception("cmd not in cmds[file_ext]")
-        cmd_exec = cmds[file_ext][cmd]
+        if cmd not in cmds[file_ext_lookup]:
+            raise Exception("cmd not in cmds[file_ext_lookup]")
+        cmd_exec = cmds[file_ext_lookup][cmd]
 
     #print(cmd_exec, file=sys.stderr)
 
