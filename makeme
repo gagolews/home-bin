@@ -203,7 +203,7 @@ def make(cmd, file_name):
         if ret.returncode != 0:
             raise Exception(output)
         else:
-            msg_success = "💚 Process finished with exit code 0. 😀💪👏"
+            msg_success = "💚 Process finished with exit code 0. 😀💪👏🙂😊😀😎😃😄😆😍"
             print(msg_success)
             if output:
                 print("…"*76)
@@ -244,7 +244,7 @@ if __name__ == "__main__":
     try:
         make(args.cmd, args.filename)
     except Exception as err:
-        msg_failure = "❗ There were errors. 😳😱🤬😭😰😖😞😡"
+        msg_failure = "❗ There were errors. 😳😱🤬😭😰😦😱😫😩😖😞😡"
         print(msg_failure, file=sys.stderr)
         print("❗"*38, file=sys.stderr)
         print(format(err), file=sys.stderr)

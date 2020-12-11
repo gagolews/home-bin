@@ -27,7 +27,7 @@ if [ ! -f "${1}" ]; then
     exit 1
 fi
 
-keepsources=false
+keepsources="false"
 
 
 if [ -z "${2}" ]; then
@@ -101,8 +101,8 @@ pandoc +RTS -K512m -RTS \
     #--default-image-extension .svg \
 
 
-if [ "$keepsources" == false ]; then
-    if [ $mimeinput == "text/x-r-markdown" ]; then
+if [ $keepsources = "false" ]; then
+    if [ $mimeinput = "text/x-r-markdown" ]; then
         rm -f "${knitrfile}"
         rm -f "${mdfile}"
 
