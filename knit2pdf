@@ -22,7 +22,7 @@
 set -e
 
 if [ ! -f "${1}" ]; then
-    echo "knit2pdf Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>"
+    echo "knit2pdf Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>"
     echo "input file does not exist or no input provided"
     echo "usage: knit2pdf infile [outfile]"
     exit 1
@@ -36,9 +36,9 @@ if [ -z "${2}" ]; then
 else
     outfile="${2}"
 fi
-tmpdir="${1/%.pdf/}-tmp-pdf"
-knitrfile="${1/%.pdf/}-tmp-pdf.Rmd"
-mdfile="${1/%.pdf/}-tmp-pdf.md"
+tmpdir="tmp-pdf-${1/%.Rmd/}"
+knitrfile="tmp-pdf-${1/%.Rmd/}.Rmd"
+mdfile="tmp-pdf-${1/%.Rmd/}.md"
 
 #rm -f "${outfile}"
 rm -f "${mdfile/%.md/.tex}"
@@ -109,17 +109,13 @@ rm -f "${mdfile/%.md/.aux}" "${mdfile/%.md/.log}" "${mdfile/%.md/.nav}" \
 
 
 if [ "$keepsources" == false ]; then
-    if [ $mimeinput == "text/x-r-markdown" ]; then
-        rm -f "${knitrfile}"
-        rm -f "${mdfile/%.md/.tex}"
-        rm -f "${mdfile}"
+    rm -f "${knitrfile}"
+    rm -f "${mdfile/%.md/.tex}"
+    rm -f "${mdfile}"
+    rm -rf "${tmpdir}"
 
-        if [ -z "$(ls -A ${tmpdir})" ]; then
-            # if tmpdir empty
-            rmdir "$tmpdir"
-        fi
-    else
-        rm -f "${mdfile/%.md/.tex}"
-        rm -f "${mdfile}"
-    fi
+#         if [ -z "$(ls -A ${tmpdir})" ]; then
+#             # if tmpdir empty
+#             rmdir "$tmpdir"
+#         fi
 fi

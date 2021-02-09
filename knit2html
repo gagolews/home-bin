@@ -21,13 +21,13 @@
 set -e
 
 if [ ! -f "${1}" ]; then
-    echo "knit2html Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>"
+    echo "knit2html Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>"
     echo "input file does not exist or no input provided"
     echo "usage: knit2html infile [outfile]"
     exit 1
 fi
 
-keepsources="false"
+keepsources=false
 
 
 if [ -z "${2}" ]; then
@@ -35,9 +35,9 @@ if [ -z "${2}" ]; then
 else
     outfile="${2}"
 fi
-tmpdir="${1/%.html/}-tmp-html"
-knitrfile="${1/%.Rmd/}-tmp-html.Rmd"
-mdfile="${1/%.Rmd/}-tmp-html.md"
+tmpdir="tmp-html-${1/%.Rmd/}"
+knitrfile="tmp-html-${1/%.Rmd/}.Rmd"
+mdfile="tmp-html-${1/%.Rmd/}.md"
 
 #rm -f "${outfile}"
 rm -f "${mdfile}"
@@ -101,16 +101,13 @@ pandoc +RTS -K512m -RTS \
     #--default-image-extension .svg \
 
 
-if [ $keepsources = "false" ]; then
-    if [ $mimeinput = "text/x-r-markdown" ]; then
-        rm -f "${knitrfile}"
-        rm -f "${mdfile}"
+if [ "$keepsources" == false ]; then
+    rm -f "${knitrfile}"
+    rm -f "${mdfile}"
+    rm -rf "${tmpdir}"
 
-        if [ -z "$(ls -A ${tmpdir})" ]; then
-            # if tmpdir empty
-            rmdir "$tmpdir"
-        fi
-    else
-        rm -f "${mdfile}"
-    fi
+#         if [ -z "$(ls -A ${tmpdir})" ]; then
+#             # if tmpdir empty
+#             rmdir "$tmpdir"
+#         fi
 fi

@@ -21,7 +21,7 @@
 set -e
 
 if [ ! -f "${1}" ]; then
-    echo "knit2md Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>"
+    echo "knit2md Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>"
     echo "input file does not exist or no input provided"
     echo "usage: ${0} infile [outfile]"
     exit 1

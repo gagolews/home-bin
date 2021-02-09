@@ -215,9 +215,9 @@ def make(cmd, file_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Executes a custom build/view/clean command based on "
+        description="Executes a custom build/view/clean/etc. command based on "
         "a file's extension.",
-        epilog="Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>",
+        epilog="Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("cmd", type=str,
