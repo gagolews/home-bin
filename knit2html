@@ -49,7 +49,7 @@ echo "${0}: converting ${1} → ${outfile}"
 mkdir -p "${tmpdir}"
 rm -f "${knitrfile}"
 
-echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+echo "\`\`\`{r,echo=FALSE,results='hide'}" > "${knitrfile}"
 cat /home/gagolews/bin/knit2html-options.R >> "${knitrfile}"
 echo "\`\`\`" >> "${knitrfile}"
 echo "" >> "${knitrfile}"

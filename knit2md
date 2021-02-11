@@ -52,7 +52,7 @@ mkdir -p "${figuresdir}"
 rm -f "{$figuresdir}/*"
 
 
-echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+echo "\`\`\`{r,echo=FALSE,results='hide'}" > "${knitrfile}"
 cat /home/gagolews/bin/knit2md-options.R >> "${knitrfile}"
 echo "\`\`\`" >> "${knitrfile}"
 echo "" >> "${knitrfile}"

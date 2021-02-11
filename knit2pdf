@@ -51,7 +51,7 @@ echo "${0}: converting ${1} → ${outfile}"
 mkdir -p "${tmpdir}"
 rm -f "${knitrfile}"
 
-echo "\`\`\`{r,echo=FALSE}" > "${knitrfile}"
+echo "\`\`\`{r,echo=FALSE,results='hide'}" > "${knitrfile}"
 cat /home/gagolews/bin/knit2pdf-options.R >> "${knitrfile}"
 echo "\`\`\`" >> "${knitrfile}"
 echo "" >> "${knitrfile}"
@@ -91,13 +91,13 @@ pandoc +RTS -K512m -RTS \
     --toc-depth 2 \
     --top-level-division=section
 
-pdflatex -interaction=batchmode "${mdfile/%.md/.tex}" || \
+xelatex -interaction=batchmode "${mdfile/%.md/.tex}" || \
         echo "!!!!!! ERROR COMPILING FILE !!!!!!" && \
         cat "${mdfile/%.md/.log}" | grep -A 10 -e "^!" && \
         rm -f "${mdfile/%.md/.tex}" && \
         exit 1
 
-pdflatex -interaction=batchmode "${mdfile/%.md/.tex}"
+xelatex -interaction=batchmode "${mdfile/%.md/.tex}"
 
 mv "${mdfile/%.md/.pdf}" "${outfile}"
 
