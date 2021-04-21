@@ -23,19 +23,19 @@
 
 
 import sys
-import os, os.path, tempfile, subprocess
-import qtpy
-from qtpy import QtWidgets
-from qtpy import QtCore
-from qtpy import QtGui
-from qtpy import QtNetwork
+import os, os.path, subprocess
+#import qtpy
+#from qtpy import QtWidgets
+#from qtpy import QtCore
+#from qtpy import QtGui
+#from qtpy import QtNetwork
 import argparse
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Run commands in R.',
-        epilog='Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>',
+        epilog='Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("cmd", type=str, help="Command to execute.", nargs="+")

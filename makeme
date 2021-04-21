@@ -37,7 +37,8 @@ exts = {
     "md":   [".md"],
     "tex":  [".tex"],
     "py":   [".py"],
-    "R":    [".R", ".r"]
+    "R":    [".R", ".r"],
+    "dot":    [".dot"]
 }
 
 
@@ -96,6 +97,9 @@ cmds = {
         "_comment_hash": True,
     },
     "R": {
+        "_comment_hash": True,
+    },
+    "dot": {
         "_comment_hash": True,
     },
 }
