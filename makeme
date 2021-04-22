@@ -50,6 +50,12 @@ cmds = {
                  "pdflatex  -shell-escape ${FILE_NAME}; "
                  "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
                  "pdflatex  -shell-escape ${FILE_NAME}",
+        # BibTeX free build, so that you can write:
+        # % makeme:
+        # %     build: build_no_bibtex
+        "build_no_bibtex": "pdflatex -file-line-error -halt-on-error -shell-escape "
+                 "-interaction=errorstopmode ${FILE_NAME} && "
+                 "pdflatex  -shell-escape ${FILE_NAME}",
         "view":  "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
                  "${FILE_NAME/%${FILE_EXT}/.bbl} "
@@ -172,10 +178,15 @@ def make(cmd, file_name):
             raise Exception("cmd not in cmds[file_ext_lookup]")
         cmd_exec = cmds[file_ext_lookup][cmd]
 
+    # command redirect, e.g., build: build_no_bibtex
+    if cmd_exec in cmds[file_ext_lookup].keys():
+        cmd_exec = cmds[file_ext_lookup][cmd_exec]
+
     #print(cmd_exec, file=sys.stderr)
 
-    if cmd_exec[-1] == "&": # fork
-        subprocess.Popen(args=["bash", "-c", cmd_exec[:-1]],
+    if cmd_exec[-1] == "&":  # fork
+        subprocess.Popen(
+            args=["bash", "-c", cmd_exec[:-1]],
             env={
                 "FILE_NAME": file_name,
                 "FILE_PATH": file_path,
@@ -186,8 +197,10 @@ def make(cmd, file_name):
             }
         )
     else:
-        ret = subprocess.run(args=["bash", "-c", cmd_exec],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        ret = subprocess.run(
+            args=["bash", "-c", cmd_exec],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             env={
                 "FILE_NAME": file_name,
                 "FILE_PATH": file_path,
