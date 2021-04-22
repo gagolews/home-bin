@@ -44,30 +44,45 @@ exts = {
 
 cmds = {
     "tex": {
-        "_comment_percent": True,
-        "build": "pdflatex -file-line-error -halt-on-error -shell-escape "
-                 "-interaction=errorstopmode ${FILE_NAME} && "
-                 "pdflatex  -shell-escape ${FILE_NAME}; "
-                 "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
-                 "pdflatex  -shell-escape ${FILE_NAME}",
-        # BibTeX free build, so that you can write:
         # % makeme:
-        # %     build: build_no_bibtex
-        "build_no_bibtex": "pdflatex -file-line-error -halt-on-error -shell-escape "
-                 "-interaction=errorstopmode ${FILE_NAME} && "
-                 "pdflatex  -shell-escape ${FILE_NAME}",
-        "view":  "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
-        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
-                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
-                 "${FILE_NAME/%${FILE_EXT}/.blg} "
-                 "${FILE_NAME/%${FILE_EXT}/.log} "
-                 "${FILE_NAME/%${FILE_EXT}/.out} "
-                 "${FILE_NAME/%${FILE_EXT}/.snm} "
-                 "${FILE_NAME/%${FILE_EXT}/.vrb} "
-                 "${FILE_NAME/%${FILE_EXT}/.toc} "
-                 "${FILE_NAME/%${FILE_EXT}/.tpt} "
-                 "${FILE_NAME/%${FILE_EXT}/.spl} "
-                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
+        # %     build: xelatex_nobibtex
+        "_comment_percent": True,
+        "build": "pdflatex_bibtex",
+
+        "pdflatex_bibtex":
+                "pdflatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "pdflatex  -shell-escape ${FILE_NAME}; "
+                "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
+                "pdflatex  -shell-escape ${FILE_NAME}",
+        "xelatex_bibtex":
+                "xelatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "xelatex  -shell-escape ${FILE_NAME}; "
+                "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
+                "xelatex  -shell-escape ${FILE_NAME}",
+        "pdflatex_nobibtex":
+                "pdflatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "pdflatex  -shell-escape ${FILE_NAME}",
+        "xelatex_nobibtex":
+                "xelatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "xelatex  -shell-escape ${FILE_NAME}",
+        "view":
+                "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean":
+                "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
+                "${FILE_NAME/%${FILE_EXT}/.bbl} "
+                "${FILE_NAME/%${FILE_EXT}/.blg} "
+                "${FILE_NAME/%${FILE_EXT}/.log} "
+                "${FILE_NAME/%${FILE_EXT}/.out} "
+                "${FILE_NAME/%${FILE_EXT}/.snm} "
+                "${FILE_NAME/%${FILE_EXT}/.vrb} "
+                "${FILE_NAME/%${FILE_EXT}/.toc} "
+                "${FILE_NAME/%${FILE_EXT}/.tpt} "
+                "${FILE_NAME/%${FILE_EXT}/.spl} "
+                "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
     },
     "Rnw": {
         "_comment_percent": True,
