@@ -20,19 +20,30 @@ Send to a TCP port the commands to be executed on a Jupyter-QtConsole.
 #   If this is not the case, refer to <https://www.gnu.org/licenses/>.         #
 #                                                                              #
 # ############################################################################ #
+
+
+kate config:
+* jupyter_qtconsole_sender: Send Chunk or Selection
+    Executable: jupyter-qtconsole-sender
+    Arguments: --chunk --cursor %{Document:Cursor:Line}:%{Document:Cursor:Column} --selection "%{Document:Selection:StartLine}:%{Document:Selection:StartColumn}-%{Document:Selection:EndLine}:%{Document:Selection:EndColumn}" -
+    Input: %{Document:Text}
+* jupyter_qtconsole_sender: Send Line or Selection
+    Executable: jupyter-qtconsole-sender
+    Arguments: --cursor %{Document:Cursor:Line}:%{Document:Cursor:Column} --selection "%{Document:Selection:StartLine}:%{Document:Selection:StartColumn}-%{Document:Selection:EndLine}:%{Document:Selection:EndColumn}" -
+    Input: %{Document:Text}
 """
 
-
-SOCKET_BUF_SIZE = 2048
-
 import sys
-import os, os.path, tempfile
+#import os
+#import os.path
+#import tempfile
 import re
-import qtpy
+#import qtpy
 from qtpy import QtCore
 from qtpy import QtNetwork
 import argparse
 
+SOCKET_BUF_SIZE = 2048
 
 
 def find_chunk_bound(text, pos, adv, separators):
@@ -52,10 +63,10 @@ def find_chunk_bound(text, pos, adv, separators):
 
         for i in range(len(regexes)):
             if not regexes[i]:  # empty pattern
-                if line: # non-empty line doesn't serve as a separator here
+                if line:  # non-empty line doesn't serve as a separator here
                     continue
 
-                if cur_indent == 0: # unindented line separated by an empty line
+                if cur_indent == 0:  # unindented line separated by an empty line
                     return pos, i
 
                 # we're at an indented line, and the next line is empty
@@ -68,11 +79,11 @@ def find_chunk_bound(text, pos, adv, separators):
                 if next_line and len(next_line)-len(next_line.lstrip()) == 0:
                     return pos, i
             else:
-                if regexes[i].search(line): # there is a match
+                if regexes[i].search(line):  # there is a match
                     return pos, i
 
         pos += adv
-        if line: cur_indent = next_indent # only if line is not empty
+        if line: cur_indent = next_indent  # only if line is not empty
 
 
     return pos, 0
@@ -83,11 +94,11 @@ def get_command(cmd, selection, cursor, chunk):
         return cmd
 
     # read from STDIN
-    text = sys.stdin.readlines() # includes the trailing \ns
+    text = sys.stdin.readlines()  # includes the trailing \ns
 
     if selection == ":-:":
         # nothing selected -- execute the current line or chunk
-        row, _ = cursor.split(":") # row:col
+        row, _ = cursor.split(":")  # row:col
         row = int(row)
 
         if not chunk:
@@ -105,17 +116,17 @@ def get_command(cmd, selection, cursor, chunk):
                 text, row, +1, end_separators)
 
             if start_sep_idx != end_sep_idx:
-                if end_sep_idx != 0: # found block ending char sequence
+                if end_sep_idx != 0:  # found block ending char sequence
                     # -> look for the matching block starting char sequence
                     start_pos, start_sep_idx = find_chunk_bound(
                         text, start_pos, -1, [start_separators[end_sep_idx]])
-                else: # found block starting char sequence
+                else:  # found block starting char sequence
                     # -> look for the matching block ending char sequence
                     end_pos, end_sep_idx = find_chunk_bound(
                         text, end_pos, +1, [end_separators[start_sep_idx]])
 
 
-        selection = "%d:%d-%d:%d"%(start_pos, 0, end_pos, len(text[end_pos]))
+        selection = "%d:%d-%d:%d" % (start_pos, 0, end_pos, len(text[end_pos]))
 
     # from_row-from_col:to_row-to_col -- all bounds are inclusive!
     sel_from, sel_to = selection.split("-")
@@ -131,15 +142,15 @@ def get_command(cmd, selection, cursor, chunk):
     text = text[sel_from[0]:(sel_to[0]+1)]
     text[0] = text[0][sel_from[1]:]
 
-    if sel_from[0] == sel_to[0]: # single text line
+    if sel_from[0] == sel_to[0]:  # single text line
         text[0] = text[0][:(sel_to[1]-sel_from[1])]
     else:
         text[-1] = text[-1][:sel_to[1]]
 
     # remove empty lines from the beginning and the end:
-    while len(text)>0 and text[0].isspace():
+    while len(text) > 0 and text[0].isspace():
         text.pop(0)
-    while len(text)>0 and text[-1].isspace():
+    while len(text) > 0 and text[-1].isspace():
         text.pop(-1)
 
     if not text: return ""
@@ -148,7 +159,7 @@ def get_command(cmd, selection, cursor, chunk):
     indent_size = len(text[0])-len(text[0].lstrip(" "))
     for i in range(len(text)):
         text[i] = text[i].rstrip()
-        if not text[i]: continue # ignore empty lines
+        if not text[i]: continue  # ignore empty lines
 
         cur_indent_size = len(text[i])-len(text[i].lstrip(" "))
         if cur_indent_size < indent_size:
@@ -166,14 +177,14 @@ def write_socket(text, port):
     socket = QtNetwork.QTcpSocket()
     socket.connectToHost(QtNetwork.QHostAddress.LocalHost, port)
     if not socket.isValid() or not socket.waitForConnected(-1):
-        raise Exception("Unable connect to a local TCP server at port %d."%port)
+        raise Exception("Unable connect to a local TCP server at port %d." % port)
 
     text_bytes = text.encode("utf-8")
     text_size = len(text_bytes)
 
     # send the number of bytes to read:
     socket.write(QtCore.QByteArray.fromRawData(
-        ("%d\n"%text_size).encode("utf-8")))
+        ("%d\n" % text_size).encode("utf-8")))
     if not socket.waitForBytesWritten(-1):
         raise Exception("Error sending buffer size to socket.")
 
@@ -182,7 +193,7 @@ def write_socket(text, port):
     if text_size > 0:
         cur = 0
         while cur < text_size:
-            cur_next = min(cur+SOCKET_BUF_SIZE, text_size)
+            #cur_next = min(cur+SOCKET_BUF_SIZE, text_size)
             cur_n = socket.writeData(text_bytes[cur:])
             if cur_n < 0 or not socket.waitForBytesWritten(-1):
                 raise Exception("Error sending buffer to socket.")
@@ -199,33 +210,43 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Send to a TCP port the commands to be executed "
         "on a Jupyter-QtConsole",
-        epilog="Copyleft (C) 2020, Marek Gagolewski <https://www.gagolewski.com>",
+        epilog="Copyleft (C) 2020-2021, Marek Gagolewski "
+        "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
         "cmd", type=str,
-        help="Command or file name (if --file is passed) to execute; "+
-        "'-' to read from the standard input.")
+        help="Command or file name (if --file is passed) to execute; "
+        "'-' to read from the standard input."
+    )
     parser.add_argument(
-        "--silent", action="store_true", # store_true->default==False
-        help="Should the printing of all messages be suppressed.")
+        "--silent", action="store_true",  # store_true->default==False
+        help="Should the printing of all messages be suppressed."
+    )
     parser.add_argument(
-        "--chunk", action="store_true", # store_true->default==False
-        help="Should the the whole code chunk around current cursor "+
-        "be executed if there is no text selection.")
+        "--chunk", action="store_true",  # store_true->default==False
+        help="Should the the whole code chunk around current cursor "
+        "be executed if there is no text selection."
+    )
     parser.add_argument(
-        "--file", action="store_true", # store_true->default==False
-        help="Path to the file to execute. If set, ignores `cursor`, `selection`, and `chunk`")
+        "--file", action="store_true",  # store_true->default==False
+        help="Path to the file to execute. "
+        "If set, ignores `cursor`, `selection`, and `chunk`"
+    )
     parser.add_argument(
         "--cursor", default="0:0", type=str,
-        help="Cursor position as row:col. Ignored unless cmd is '-'.")
-    parser.add_argument("--selection", default=":-:", type=str,
+        help="Cursor position as row:col. Ignored unless cmd is '-'."
+    )
+    parser.add_argument(
+        "--selection", default=":-:", type=str,
         help="Selection position from-to of the form row:col-row:col. "
         "Ignored unless `cmd` is '-'. If there is no selection, the whole line "
-        "or code chunk as indicated by the cursor position will be executed")
+        "or code chunk as indicated by the cursor position will be executed"
+    )
     parser.add_argument(
         "--port", default=6666, type=int,
-        help="TCP port to connect to at the localhost.")
+        help="TCP port to connect to at the localhost."
+    )
     args = parser.parse_args()
 
     try:
@@ -239,9 +260,9 @@ if __name__ == "__main__":
         text = text.rstrip()
 
         sent_size = write_socket(text, args.port)
-        if not args.silent: print("%d bytes sent."%sent_size, file=sys.stderr)
+        if not args.silent: print("%d bytes sent." % sent_size, file=sys.stderr)
         sys.exit(0)
 
     except Exception as err:
-        if not args.silent: print("Error: %s"%format(err), file=sys.stderr)
+        if not args.silent: print("Error: %s" % format(err), file=sys.stderr)
         sys.exit(1)
