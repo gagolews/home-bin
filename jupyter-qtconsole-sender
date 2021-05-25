@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# kate: default-dictionary en_AU; syntax python
 
 
 """
@@ -42,6 +43,7 @@ import re
 from qtpy import QtCore
 from qtpy import QtNetwork
 import argparse
+import subprocess
 
 SOCKET_BUF_SIZE = 2048
 
@@ -125,7 +127,6 @@ def get_command(cmd, selection, cursor, chunk):
                     end_pos, end_sep_idx = find_chunk_bound(
                         text, end_pos, +1, [end_separators[start_sep_idx]])
 
-
         selection = "%d:%d-%d:%d" % (start_pos, 0, end_pos, len(text[end_pos]))
 
     # from_row-from_col:to_row-to_col -- all bounds are inclusive!
@@ -206,10 +207,47 @@ def write_socket(text, port):
     return text_size
 
 
+def write_qdbus(text):
+    text_bytes = text.encode("utf-8")
+    text_size = len(text_bytes)
+
+    if text_size > 0:
+        p = subprocess.run(
+            "for q in `qdbus | grep konsole`; do "
+            "    for s in `qdbus ${q} | grep /Sessions/`; do "
+            "        echo \"${q} ${s} `qdbus ${q} ${s} isMonitorActivity`\"; "
+            "    done; "
+            "done",
+            shell=True,
+            capture_output=True,
+            check=True)
+
+        # get the first session that has Monitor for Activity turned on
+        p = p.stdout.decode('utf-8').strip().split('\n')
+        p = [s.split() for s in p]
+        p = [(process, session) for (process, session, monitoring) in p
+             if monitoring == 'true']
+        if not p: raise Exception("No konsole session is monitoring for any activity.")
+        p = p[0]
+
+        subprocess.run(
+            [
+                "qdbus",
+                p[0],
+                p[1],
+                "org.kde.konsole.Session.runCommand",
+                text_bytes,
+            ],
+            check=True
+        )
+
+    return text_size
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Send to a TCP port the commands to be executed "
-        "on a Jupyter-QtConsole",
+        "in Jupyter-QtConsole or konsole",
         epilog="Copyleft (C) 2020-2021, Marek Gagolewski "
         "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -258,11 +296,24 @@ if __name__ == "__main__":
             text = get_command(args.cmd, args.selection, args.cursor, args.chunk)
 
         text = text.rstrip()
-
-        sent_size = write_socket(text, args.port)
-        if not args.silent: print("%d bytes sent." % sent_size, file=sys.stderr)
-        sys.exit(0)
-
     except Exception as err:
         if not args.silent: print("Error: %s" % format(err), file=sys.stderr)
         sys.exit(1)
+
+    # First, try to connect to a given socket.
+    try:
+        sent_size = write_socket(text, args.port)
+        if not args.silent: print("%d bytes sent." % sent_size, file=sys.stderr)
+        sys.exit(0)
+    except Exception as err:
+        if not args.silent: print("Error: %s" % format(err), file=sys.stderr)
+
+    # If the above fails, try to seek a konsole session that monitors for activity
+    try:
+        sent_size = write_qdbus(text)
+        if not args.silent: print("%d bytes sent." % sent_size, file=sys.stderr)
+        sys.exit(0)
+    except Exception as err:
+        if not args.silent: print("Error: %s" % format(err), file=sys.stderr)
+
+    sys.exit(1)
