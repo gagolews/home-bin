@@ -220,7 +220,8 @@ def write_socket(text, port):
 
 
 def write_qdbus(text):
-    text_bytes = text.encode("utf-8")
+    #text_bytes = text.encode("utf-8")
+    text_bytes = ("\033[200~"+text+"\033[201~").encode("utf-8")
     text_size = len(text_bytes)
 
     if text_size > 0:
@@ -266,6 +267,8 @@ def write_qdbus(text):
         )
 
     return text_size
+
+
 
 
 if __name__ == "__main__":
