@@ -18,4 +18,7 @@
 #                                                                              #
 # ############################################################################ #
 
+# colourised grep displaying full URIs
+# assumption: grep returns paths relative to the cwd
+
 grep --color=always -T `[ -f .grepexclude ] && echo '--exclude-from=.grepexclude'` $@  | sed -r -e "s|^|file://`pwd`/|"
