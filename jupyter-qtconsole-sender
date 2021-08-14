@@ -32,10 +32,6 @@ kate config:
     Executable: jupyter-qtconsole-sender
     Arguments: --cursor %{Document:Cursor:Line}:%{Document:Cursor:Column} --selection "%{Document:Selection:StartLine}:%{Document:Selection:StartColumn}-%{Document:Selection:EndLine}:%{Document:Selection:EndColumn}" -
     Input: %{Document:Text}
-* jupyter_qtconsole_sender: Source File
-    Executable: jupyter-qtconsole-sender
-    Arguments: --file %{Document:FilePath}
-    Save File
 """
 
 import sys
