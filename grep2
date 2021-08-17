@@ -18,7 +18,30 @@
 #                                                                              #
 # ############################################################################ #
 
-# colourised grep displaying full URIs
-# assumption: grep returns paths relative to the cwd
+# colourised find+grep displaying full URIs and excluding file paths
+# listed in ./.grepexclude (unless [path] is given)
 
-grep --color=always -T `[ -f .grepexclude ] && echo '--exclude-from=.grepexclude'` $@  | sed -r -e "s|^|file://`pwd`/|"
+# Usage: grep2 [path] -FLAGSe expression
+
+if [ $# -eq 2 ]; then
+    set -o noglob
+    exclude_paths=`[ -f .grepexclude ] && cat .grepexclude`
+    exclude_args=''
+    for f in ${exclude_paths[@]}; do
+        exclude_args="${exclude_args} -not -path ./${f}"
+    done
+    files=`echo $exclude_args | xargs find -type f | sort`
+    set +o noglob
+
+    echo $files | xargs grep --color=always -T $@  | sed -r -e "s|./|file://`pwd`/|"
+elif [ $# -eq 3 ]; then
+    path=`readlink -f $1`
+    files=`find $path -type f | sort`
+
+    echo $files | xargs grep --color=always -T $2 $3  | sed -r -e "s|/|file:///|"
+else
+    echo "Usage: $0 [path] -flags pattern  (e.g., man/ -FIine 'query')"
+    exit 1
+fi
+
+
