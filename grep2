@@ -1,9 +1,9 @@
-#!/usr/bin/bash
-# kate: syntax bash
+#!/usr/bin/python3
+# kate: default-dictionary en_AU; syntax python
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>      #
+#   Copyleft (C) 2021, Marek Gagolewski <https://www.gagolewski.com>           #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -23,25 +23,105 @@
 
 # Usage: grep2 [path] -FLAGSe expression
 
-if [ $# -eq 2 ]; then
-    set -o noglob
-    exclude_paths=`[ -f .grepexclude ] && cat .grepexclude`
-    exclude_args=''
-    for f in ${exclude_paths[@]}; do
-        exclude_args="${exclude_args} -not -path ./${f}"
-    done
-    files=`echo $exclude_args | xargs find -type f | sort`
-    set +o noglob
+import natsort
+import re
+import os
+import argparse
 
-    echo $files | xargs grep --color=always -T $@  | sed -r -e "s|./|file://`pwd`/|"
-elif [ $# -eq 3 ]; then
-    path=`readlink -f $1`
-    files=`find $path -type f | sort`
 
-    echo $files | xargs grep --color=always -T $2 $3  | sed -r -e "s|/|file:///|"
-else
-    echo "Usage: $0 [path] -flags pattern  (e.g., man/ -FIine 'query')"
-    exit 1
-fi
+def is_probs_text_file(path):
+    """ check if there's byte 0 at the start """
+    if not os.path.isfile(path): return False
+
+    #with open(path, "rb") as f:
+        #d = f.read(1024)
+        #if b'\x00' in d: return False
+
+    return True
+
+
+def search(path, p):
+    if not is_probs_text_file(path): return
+    where = []
+    what = []
+    num = 0
+    try:
+        with open(path, "r") as f:
+            for line in f:
+                num += 1
+                if p.search(line) is not None:
+                    where.append(num)
+                    what.append(line)
+
+        if not where: return
+
+        print("\033[31mfile://%s\033[m" % path)
+        for (num, line) in zip(where, what):
+            print("\033[33m%5d\033[m: %s" % (num, line), end='')
+    except:
+        #print("\033[31mfile://%s\033[m: \033[41mERROR\033[m" % path)
+        pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Simplified colourised grep",
+        epilog="Copyleft (C) 2021, Marek Gagolewski "
+        "<https://www.gagolewski.com>",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "regex", type=str,
+        help="Search pattern"
+    )
+    parser.add_argument(
+        "paths", nargs="*", default=["."],
+        help="Files and directories to search in (recursively)"
+    )
+    args = parser.parse_args()
+
+    p = re.compile(args.regex)
+
+    # TODO: use .grepexclude
+
+    paths = []
+    for path in args.paths:
+        if os.path.isfile(path):
+            paths.append(path)
+        else:
+            for root, dirs, files in os.walk(path):
+                paths.extend([
+                    os.path.join(root, file) for file in files
+                ])
+
+    paths = [os.path.realpath(path) for path in paths]
+    paths = natsort.natsorted(set(paths))
+
+    for path in paths:
+        search(path, p)
+
+
+## # TODO: rewrite!
+## # supports neither spaces inside file names nor too lengthy file lists
+##
+## if [ $# -eq 2 ]; then
+##     set -o noglob
+##     exclude_paths=`[ -f .grepexclude ] && cat .grepexclude`
+##     exclude_args=''
+##     for f in ${exclude_paths[@]}; do
+##         exclude_args="${exclude_args} -not -path ./${f}"
+##     done
+##     files=`echo $exclude_args | xargs find -type f | sort`
+##     set +o noglob
+##
+##     echo $files | xargs grep --color=always -T $@  | sed -r -e "s|./|file://`pwd`/|"
+## elif [ $# -eq 3 ]; then
+##     path=`readlink -f $1`
+##     files=`find $path -type f | sort`
+##
+##     echo $files | xargs grep --color=always -T $2 $3  | sed -r -e "s|/|file:///|"
+## else
+##     echo "Usage: $0 [path] -flags pattern  (e.g., man/ -FIine 'query')"
+##     exit 1
+## fi
 
 
