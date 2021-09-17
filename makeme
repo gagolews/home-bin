@@ -48,7 +48,12 @@ cmds = {
         # %     build: xelatex_nobibtex
         "_comment_percent": True,
         "build": "pdflatex_bibtex",
-
+        "pdflatex_biber":
+                "pdflatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "pdflatex  -shell-escape ${FILE_NAME}; "
+                "biber ${FILE_NAME/%${FILE_EXT}/} && "
+                "pdflatex  -shell-escape ${FILE_NAME}",
         "pdflatex_bibtex":
                 "pdflatex -file-line-error -halt-on-error -shell-escape "
                 "-interaction=errorstopmode ${FILE_NAME} && "

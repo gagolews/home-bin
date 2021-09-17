@@ -27,7 +27,11 @@ if [ ! -f "${1}" ]; then
     exit 1
 fi
 
-keepsources=false
+if [ -z "${KEEPSOURCES}" ]; then
+    keepsources=false
+else
+    keepsources=true
+fi
 
 
 if [ -z "${2}" ]; then
