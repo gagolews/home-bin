@@ -77,7 +77,36 @@ cmds = {
         "view":
                 "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
-                "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
+                "rm -f "
+                "${FILE_NAME/%${FILE_EXT}/.aux} "
+                "${FILE_NAME/%${FILE_EXT}/.bbl} "
+                "${FILE_NAME/%${FILE_EXT}/.bcf} "
+                "${FILE_NAME/%${FILE_EXT}/.blg} "
+                "${FILE_NAME/%${FILE_EXT}/.loc} "
+                "${FILE_NAME/%${FILE_EXT}/.log} "
+                "${FILE_NAME/%${FILE_EXT}/.out} "
+                "${FILE_NAME/%${FILE_EXT}/.run.xml} "
+                "${FILE_NAME/%${FILE_EXT}/.soc} "
+                "${FILE_NAME/%${FILE_EXT}/.snm} "
+                "${FILE_NAME/%${FILE_EXT}/.vrb} "
+                "${FILE_NAME/%${FILE_EXT}/.toc} "
+                "${FILE_NAME/%${FILE_EXT}/.tpt} "
+                "${FILE_NAME/%${FILE_EXT}/.spl} "
+                "${FILE_NAME/%${FILE_EXT}/.synctex.gz} "
+                "&& echo 'makeme: All clear now.'",
+    },
+    "Rnw": {
+        "_comment_percent": True,
+        "build":
+                "Rscript -e \""
+                "knitr::knit2pdf('${FILE_NAME}', quiet=TRUE, "
+                "compiler = 'xelatex')"
+                "\"",
+        "view":
+                "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "clean":
+                "rm -f "
+                "${FILE_NAME/%${FILE_EXT}/.aux} "
                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
                 "${FILE_NAME/%${FILE_EXT}/.blg} "
                 "${FILE_NAME/%${FILE_EXT}/.log} "
@@ -87,26 +116,8 @@ cmds = {
                 "${FILE_NAME/%${FILE_EXT}/.toc} "
                 "${FILE_NAME/%${FILE_EXT}/.tpt} "
                 "${FILE_NAME/%${FILE_EXT}/.spl} "
-                "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
-    },
-    "Rnw": {
-        "_comment_percent": True,
-        "build": "Rscript -e \""
-                 "knitr::knit2pdf('${FILE_NAME}', quiet=TRUE, "
-                 "compiler = 'xelatex')"
-                 "\"",
-        "view":  "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
-        "clean": "rm -f ${FILE_NAME/%${FILE_EXT}/.aux} "
-                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
-                 "${FILE_NAME/%${FILE_EXT}/.blg} "
-                 "${FILE_NAME/%${FILE_EXT}/.log} "
-                 "${FILE_NAME/%${FILE_EXT}/.out} "
-                 "${FILE_NAME/%${FILE_EXT}/.snm} "
-                 "${FILE_NAME/%${FILE_EXT}/.vrb} "
-                 "${FILE_NAME/%${FILE_EXT}/.toc} "
-                 "${FILE_NAME/%${FILE_EXT}/.tpt} "
-                 "${FILE_NAME/%${FILE_EXT}/.spl} "
-                 "${FILE_NAME/%${FILE_EXT}/.synctex.gz} && echo 'makeme: All clear now.'",
+                "${FILE_NAME/%${FILE_EXT}/.synctex.gz} "
+                "&& echo 'makeme: All clear now.'",
     },
     "html": {
         "view":  "preview_html ${FILE_NAME}",
