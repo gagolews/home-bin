@@ -1,5 +1,7 @@
 # Copyleft (C) 2002-2021, Marek Gagolewski <https://www.gagolewski.com>
 
+# This file is sourced by ~/.Rprofile.
+
 if (interactive()) {
     # defaults:
     # prompt="> "
