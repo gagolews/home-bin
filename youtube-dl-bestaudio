@@ -3,4 +3,4 @@
 #mpv --vid=no "$1" --cache-secs=60
 #mpv "$(youtube-dl -g $1 -f 251/140 --no-warnings)" --vid=no
 
-youtube-dl -i -f bestaudio "$1"
+yt-dlp -i -f bestaudio "$1"
