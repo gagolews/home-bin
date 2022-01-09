@@ -271,7 +271,7 @@ def write_qdbus(text, kernel):
         raise Exception("Not running process named `%s`" % kernel)
 
     if proc_name in ["bash", "R", "ipython", "ipython3", "ipython2"]:
-        text = "\033[200~"+text+"\033[201~"
+        text = "\033[200~"+text+"\n"+"\033[201~"
 
 
     #print("Test: '%s'" % format(proc_name), file=sys.stderr)
