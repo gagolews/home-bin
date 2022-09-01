@@ -20,7 +20,7 @@ License
 -------
 
 ```
-Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>
+Copyleft (C) 2020-2022, Marek Gagolewski <https://www.gagolewski.com>
 
 These programs are free software: you can redistribute them and/or modify
 them under the terms of the GNU Affero General Public License

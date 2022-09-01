@@ -7,7 +7,7 @@ be executed on a TCP port.
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2020-2021, Marek Gagolewski <https://www.gagolewski.com>      #
+#   Copyleft (C) 2020-2022, Marek Gagolewski <https://www.gagolewski.com>      #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -253,7 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "About jupyter-qtconsole-listener",
             "An application that features a Jupyter-QtConsole "
             "and listens for commands to execute on a TCP port.\n\n"
-            "Copyleft (C) 2020-2021, Marek Gagolewski\n"
+            "Copyleft (C) 2020-2022, Marek Gagolewski\n"
             "<https://www.gagolewski.com>\n\n"
             "QtConsole: https://github.com/jupyter/qtconsole\n"
             "Project Jupyter: https://jupyter.org/\n\n"
@@ -334,12 +334,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="An application that features a Jupyter-QtConsole "
         "and listens for commands to be executed on a TCP port.",
-        epilog="Copyleft (C) 2020-2021, Marek Gagolewski "
+        epilog="Copyleft (C) 2020-2022, Marek Gagolewski "
         "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        "kernel", default=['python3', 'ir', 'bash'], type=str, nargs='*',
+        "kernel", default=['python3', 'ir'], type=str, nargs='*',
         help="The ID of an installed kernel, e.g., 'python3' (the default), "
              "'bash' or 'ir'."
     )
