@@ -1,0 +1,133 @@
+#!/bin/bash
+# kate: hl bash
+
+# ############################################################################ #
+#                                                                              #
+#   Copyleft (C) 2022, Marek Gagolewski <https://www.gagolewski.com>           #
+#                                                                              #
+#                                                                              #
+#   This program is free software: you can redistribute it and/or modify       #
+#   it under the terms of the GNU Affero General Public License                #
+#   Version 3, 19 November 2007, published by the Free Software Foundation.    #
+#   This program is distributed in the hope that it will be useful,            #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of             #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               #
+#   GNU Affero General Public License Version 3 for more details.              #
+#   You should have received a copy of the License along with this program.    #
+#   If this is not the case, refer to <https://www.gnu.org/licenses/>.         #
+#                                                                              #
+# ############################################################################ #
+
+
+dpi=150
+jpg_quality=85
+tmpdir=/tmp/latexmk-ebook
+origdir=`pwd`
+
+set -e
+
+if [ ! -d "${1}" -o -z "${2}" ]; then
+    echo "latexmk-ebook Copyleft (C) 2022, Marek Gagolewski <https://www.gagolewski.com>"
+    echo "input directory does not exist, no directory provided, or no output file provided"
+    echo "usage: ${0} indir outfile"
+    exit 1
+fi
+
+
+
+rm -rf "${tmpdir}"
+mkdir -p "${tmpdir}"
+cp "${1}"/* "${tmpdir}"
+cd "${tmpdir}"
+make clean
+
+TEXFILE=`basename *.tex`
+PDFFILE="${TEXFILE/%.tex/.pdf}"
+
+
+for f in *.png; do
+    echo -n "*** converting file://${tmpdir}/${f} ... "
+    convert -density $dpi "$f" .out.png
+
+    size1=$(stat -c %s "$f")
+    size2=$(stat -c %s ".out.png")
+    if (( size1 > size2 )) ; then
+        echo "✅ file size reduction ($size1 vs $size2); using converted file"
+        cp "$f" "$f.bak"
+        cp .out.png "$f"
+    else
+        echo "no file size reduction ($size1 vs $size2); skipping"
+    fi
+    rm -f .out.png
+
+done
+
+for f in *.pdf; do
+    echo -n "*** converting file://${tmpdir}/${f} ... "
+    # antialias best -> bug? does not render text correctly :/\
+    # pdftocairo supports rasterising semi-transparent streams, pdftops does not
+    pdftocairo "$f" -antialias good -r 1200 -origpagesizes -level2 -ps .out.ps
+    gs -q -dNOPAUSE -dBATCH -dSAFER -sDEVICE=pdfwrite \
+        -r1200  -dCompatibilityLevel=1.5 -dPDFSETTINGS=/ebook  \
+        -dEmbedAllFonts=true -dSubsetFonts=true -dCompressFonts=true \
+        -dDetectDuplicateImages  \
+        -dColorImageResolution=$dpi -dAntiAliasColorImages=true \
+        -dGrayImageResolution=$dpi  -dAntiAliasGrayImages=true  \
+        -dMonoImageResolution=$dpi  -dAntiAliasMonoImages=true  \
+        -dAutoRotatePages=/All  \
+        -dCompressPages=true \
+        -sOutputFile=.out.pdf1 .out.ps
+
+    convert -density $dpi "$f" -quality $jpg_quality .out.jpg
+    img2pdf .out.jpg -o .out.pdf2
+
+    size1=$(stat -c %s ".out.pdf1")
+    size2=$(stat -c %s ".out.pdf2")
+
+    if (( size1 < size2 )) ; then
+        echo -n "(ps <  jpeg) "
+        cp .out.pdf1 .out.pdf
+    else
+        echo -n "(ps >= jpeg) "
+        cp .out.pdf2 .out.pdf
+    fi
+
+    size1=$(stat -c %s "$f")
+    size2=$(stat -c %s ".out.pdf")
+    if (( size1 > size2 )) ; then
+        echo "✅ file size reduction ($size1 vs $size2); using converted file"
+        cp "$f" "$f.bak"
+        cp .out.pdf "$f"
+    else
+        echo "no file size reduction ($size1 vs $size2); skipping"
+    fi
+    rm -f .out.ps .out.pdf .out.pdf1 .out.pdf2 .out.jpg
+done
+
+
+echo "*** running latexmk..."
+
+latexmk -quiet -pdfxe -dvi- -ps-  # should create $PDFFILE
+
+
+
+echo "*** generating screen-ready PDF..."
+
+exiftool \
+    -Creator="Marek Gagolewski" \
+    -Producer="Marek Gagolewski" \
+    "$PDFFILE"
+
+cd "${origdir}"
+qpdf "${tmpdir}/${PDFFILE}" \
+    --linearize \
+    --compress-streams=y \
+    --optimize-images \
+    --decode-level=generalized \
+    --object-streams=generate \
+    --recompress-flate \
+    --compression-level=9 \
+    --stream-data=compress \
+    "${2}"
+
+echo "*** output saved as ${2} ✅✅✅"

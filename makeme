@@ -79,6 +79,7 @@ cmds = {
                 "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
+                "${FILE_NAME/%${FILE_EXT}/.abs} "
                 "${FILE_NAME/%${FILE_EXT}/.aux} "
                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
                 "${FILE_NAME/%${FILE_EXT}/.bcf} "
@@ -107,6 +108,7 @@ cmds = {
                 "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
+                "${FILE_NAME/%${FILE_EXT}/.abs} "
                 "${FILE_NAME/%${FILE_EXT}/.aux} "
                 "${FILE_NAME/%${FILE_EXT}/.bbl} "
                 "${FILE_NAME/%${FILE_EXT}/.blg} "
