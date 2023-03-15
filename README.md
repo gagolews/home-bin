@@ -1,7 +1,7 @@
 # [Marek](https://www.gagolewski.com)'s `~/bin/` Scripts
 
 These come with no description, no help, nothing whatsoever.
-I don't care.
+
 But still, you may find these useful.
 
 
@@ -20,7 +20,7 @@ License
 -------
 
 ```
-Copyleft (C) 2020-2022, Marek Gagolewski <https://www.gagolewski.com>
+Copyleft (C) 2020-2023, Marek Gagolewski <https://www.gagolewski.com>
 
 These programs are free software: you can redistribute them and/or modify
 them under the terms of the GNU Affero General Public License

@@ -1,0 +1,17 @@
+*://*.realpython.com/*
+*://*.geeksforgeeks.org/*
+*://*.freecodecamp.org/*
+*://*.datagy.io/*
+*://*.fstring.help/*
+*://*.pythontutorial.net/*
+*://*.builtin.com/*
+*://*.pythoninoffice.com/*
+*://*.pythonmorsels.com/*
+*://*.towardsdatascience.com/*
+*://*.towardsdev.com/*
+*://*.careerkarma.com/*
+*://*.askpython.com/*
+*://*.zetcode.com/*
+*://*.deepai.org/*
+*://*.takethiscourse.net/*
+*://*.tutorialspoint.com/*

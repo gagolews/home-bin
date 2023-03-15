@@ -7,7 +7,7 @@ Send to a TCP port the commands to be executed on a Jupyter-QtConsole.
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2020-2022, Marek Gagolewski <https://www.gagolewski.com>      #
+#   Copyleft (C) 2020-2023, Marek Gagolewski <https://www.gagolewski.com>      #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Send to a TCP port the commands to be executed "
         "in Jupyter-QtConsole or konsole",
-        epilog="Copyleft (C) 2020-2021, Marek Gagolewski "
+        epilog="Copyleft (C) 2020-2023, Marek Gagolewski "
         "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )

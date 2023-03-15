@@ -3,7 +3,7 @@
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2021, Marek Gagolewski <https://www.gagolewski.com>           #
+#   Copyleft (C) 2023, Marek Gagolewski <https://www.gagolewski.com>           #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -65,7 +65,7 @@ def search(path, p):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Simplified colourised grep",
-        epilog="Copyleft (C) 2021, Marek Gagolewski "
+        epilog="Copyleft (C) 2023, Marek Gagolewski "
         "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
