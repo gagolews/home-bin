@@ -25,7 +25,9 @@ if (interactive()) {
     # options(warnPartialMatchDollar=TRUE)
     options(help_type="html")
 
-    unload <- function(pkg, verbose=TRUE) {
+    marekstuff <- new.env()
+
+    marekstuff$unload <- function(pkg, verbose=TRUE) {
         ppkg <- paste0("package:", pkg)
         if (ppkg %in% search()) {
             dynlib <- grep(sapply(.dynLibs(), "[[", "name"), pattern=pkg)
@@ -42,7 +44,7 @@ if (interactive()) {
         }
     }
 
-    reload <- function(pkg, verbose=TRUE) {
+    marekstuff$reload <- function(pkg, verbose=TRUE) {
         ppkg <- paste0("package:", pkg)
         if (ppkg %in% search()) {
             unload(pkg, verbose=FALSE)
@@ -55,14 +57,15 @@ if (interactive()) {
         }
     }
 
-    exts <- c("reload()", "unload()")
-
     .First <- function() {
         cat(sprintf(
-            "# R %s.%s [using ~/.Rprofile] [extras: %s]\n",
+            "# R %s.%s [using ~/.Rprofile] [marekstuff: %s]\n",
             R.Version()$major,
             R.Version()$minor,
-            paste0(exts, collapse=",")
+            paste0(ls(envir=parent.env(globalenv())), collapse=", ")
         ))
     }
+
+    suppressMessages(attach(marekstuff))
+    rm("marekstuff")
 }
