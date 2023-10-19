@@ -31,14 +31,14 @@ import yaml
 
 
 exts = {
-    "html": [".html"],
-    "Rmd":  [".Rmd", ".rmd"],
-    "Rnw":  [".Rnw", ".rnw"],
-    "md":   [".md"],
-    "tex":  [".tex"],
-    "py":   [".py"],
-    "R":    [".R", ".r"],
-    "dot":    [".dot"],
+    "html":    [".html"],
+    "Rmd":     [".Rmd", ".rmd"],
+    "Rnw":     [".Rnw", ".rnw"],
+    "md":      [".md"],
+    "tex":     [".tex"],
+    "py":      [".py"],
+    "R":       [".R", ".r"],
+    "dot":     [".dot"],
     "puml":    [".puml"]
 }
 
@@ -135,7 +135,7 @@ cmds = {
     },
     "py": {
         "build":
-            "jupyter-qtconsole-sender --kernel=ipython3 \"%run ${FILE_PATH}\"",
+            "jupyter-qtconsole-sender --kernel=ipython3 \"%run '${FILE_PATH}'\"",
         "_comment_hash": True,
     },
     "R": {
