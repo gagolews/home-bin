@@ -7518,3 +7518,9 @@
 *://codeutility.org/*
 *://copyprogramming.com/*
 *://programmerz.ru/*
+*://math-linux.com/*
+*://www.typeerror.org/*
+*://www.techinfoin.com/*
+*://www.physicsread.com/*
+*://pythonbasics.org/*
+*://www.w3schools.com/*

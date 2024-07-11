@@ -76,7 +76,7 @@ cmds = {
                 "-interaction=errorstopmode ${FILE_NAME} && "
                 "xelatex  -shell-escape ${FILE_NAME}",
         "view":
-                "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+                "okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
                 "${FILE_NAME/%${FILE_EXT}/.abs} "
@@ -105,7 +105,7 @@ cmds = {
                 "compiler = 'xelatex')"
                 "\"",
         "view":
-                "kstart5 okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+                "okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
                 "${FILE_NAME/%${FILE_EXT}/.abs} "

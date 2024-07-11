@@ -3,7 +3,7 @@
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2022-2023, Marek Gagolewski <https://www.gagolewski.com>           #
+#   Copyleft (C) 2022-2024, Marek Gagolewski <https://www.gagolewski.com>      #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -27,7 +27,7 @@ origdir=`pwd`
 set -e
 
 if [ ! -d "${1}" -o -z "${2}" ]; then
-    echo "latexmk-ebook Copyleft (C) 2022-2023, Marek Gagolewski <https://www.gagolewski.com>"
+    echo "latexmk-ebook Copyleft (C) 2022-2024, Marek Gagolewski <https://www.gagolewski.com>"
     echo "input directory does not exist, no directory provided, or no output file provided"
     echo "usage: ${0} indir outfile"
     exit 1
@@ -47,7 +47,7 @@ PDFFILE="${TEXFILE/%.tex/.pdf}"
 
 for f in *.png; do
     echo -n "*** converting file://${tmpdir}/${f} ... "
-    convert -density $dpi "$f" .out.png
+    magick -density $dpi "$f" .out.png
 
     size1=$(stat -c %s "$f")
     size2=$(stat -c %s ".out.png")
@@ -78,7 +78,7 @@ for f in *.pdf; do
         -dCompressPages=true \
         -sOutputFile=.out.pdf1 .out.ps
 
-    convert -density $dpi "$f" -quality $jpg_quality .out.jpg
+    magick -density $dpi "$f" -quality $jpg_quality .out.jpg
     img2pdf .out.jpg -o .out.pdf2
 
     size1=$(stat -c %s ".out.pdf1")

@@ -19,7 +19,7 @@
 # ############################################################################ #
 
 # colourised find+grep displaying full URIs and excluding file paths
-# listed in ./.grepexclude (unless [path] is given)
+# listed in ./.grepexclude (unless [path] is given) [SLOW]
 
 # Usage: grep2 [path] -FLAGSe expression
 

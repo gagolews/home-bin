@@ -1,6 +1,8 @@
-# Copyleft (C) 2002-2023, Marek Gagolewski <https://www.gagolewski.com>
+# Copyleft (C) 2002-2024, Marek Gagolewski <https://www.gagolewski.com>
 
 # This file is sourced by ~/.Rprofile.
+
+options(repos=c(CRAN="https://cran.r-project.org"))
 
 if (interactive()) {
     # defaults:
