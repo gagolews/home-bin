@@ -22,7 +22,8 @@ Send to a TCP port the commands to be executed on a Jupyter-QtConsole.
 #                                                                              #
 # ############################################################################ #
 
-[qdbus must be installed (consider setting up an alias qdbus=qdbus6 etc.]
+[qdbus must be installed]
+
 
 kate config:
 * jupyter_qtconsole_sender: Send Chunk or Selection
@@ -38,6 +39,8 @@ kate config:
 * TODO: source the whole file...
     TODO "--file" ignores `cursor`, `selection`, and `chunk`"
 """
+
+QDBUS="qdbus6"
 
 import sys
 #import os
@@ -55,11 +58,11 @@ SOCKET_BUF_SIZE = 2048
 
 def get_running_qdbus_proc():
     p = subprocess.run(
-        "for q in `qdbus | grep konsole`; do "
-        "    for s in `qdbus ${q} | grep /Sessions/`; do "
-        "        echo \"${q} ${s} `qdbus ${q} ${s} isMonitorActivity`\"; "
+        "for q in `%(qdbus)s | grep konsole`; do "
+        "    for s in `%(qdbus)s ${q} | grep /Sessions/`; do "
+        "        echo \"${q} ${s} `%(qdbus)s ${q} ${s} isMonitorActivity`\"; "
         "    done; "
-        "done",
+        "done" % dict(qdbus=QDBUS),
         shell=True,
         capture_output=True,
         check=True
@@ -70,12 +73,13 @@ def get_running_qdbus_proc():
     p = [(process, session) for (process, session, monitoring) in p
             if monitoring == 'true']
     if not p:
-        raise Exception("No Konsole session is monitoring for any activity.")
+        raise Exception("No Konsole session is monitoring for activities.")
     p = p[0]
+
 
     # get child processes:
     q = subprocess.run(
-        "pgrep -P `qdbus %s %s org.kde.konsole.Session.foregroundProcessId`" % (p[0], p[1]),
+        "pgrep -P `%(qdbus)s %(process)s %(session)s org.kde.konsole.Session.foregroundProcessId`" % dict(qdbus=QDBUS, process=p[0], session=p[1]),
         shell=True,
         capture_output=True,
         check=False
@@ -86,7 +90,7 @@ def get_running_qdbus_proc():
         raise Exception("Konsole foreground process is running a child process.")
 
     proc_name = subprocess.run(
-        "cat /proc/`qdbus %s %s org.kde.konsole.Session.foregroundProcessId`/comm" % (p[0], p[1]),
+        "cat /proc/`%(qdbus)s %(process)s %(session)s org.kde.konsole.Session.foregroundProcessId`/comm" % dict(qdbus=QDBUS, process=p[0], session=p[1]),
         shell=True,
         capture_output=True,
         check=False
@@ -286,7 +290,7 @@ def write_qdbus(text, kernel):
 
     subprocess.run(
         [
-            "qdbus",
+            QDBUS,
             servicename,
             path,
             "org.kde.konsole.Session.runCommand",
@@ -363,13 +367,14 @@ if __name__ == "__main__":
         sys.exit(1)
 
 
-    # Try to seek a Konsole session that monitors for activity
+    # Seek a Konsole session that monitors for activity
     try:
         sent_size = write_qdbus(text, args.kernel)
         if not args.silent: print("Konsole: %d bytes sent." % sent_size, file=sys.stderr)
         sys.exit(0)
     except Exception as err:
         if not args.silent: print("Error: %s" % format(err), file=sys.stderr)
+
 
     # If the above fails, try to connect to a given socket.
     try:
