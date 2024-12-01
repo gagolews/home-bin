@@ -87,6 +87,7 @@ cmds = {
                 "${FILE_NAME/%${FILE_EXT}/.loc} "
                 "${FILE_NAME/%${FILE_EXT}/.log} "
                 "${FILE_NAME/%${FILE_EXT}/.out} "
+                "${FILE_NAME/%${FILE_EXT}/.nav} "
                 "${FILE_NAME/%${FILE_EXT}/.run.xml} "
                 "${FILE_NAME/%${FILE_EXT}/.soc} "
                 "${FILE_NAME/%${FILE_EXT}/.snm} "
