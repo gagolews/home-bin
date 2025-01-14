@@ -41,7 +41,7 @@ echo "${0}: converting ${infile} → ${outfile}"
 pandoc $infile -o $outfile \
     --standalone \
     -t revealjs \
-    -V revealjs-url=https://cdn.jsdelivr.net/npm/reveal.js@3.9.2 \
+    -V revealjs-url=https://unpkg.com/reveal.js@^4 \
     --incremental \
-    --katex=https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/ \
+    --katex=https://cdn.jsdelivr.net/npm/katex@0.16.20/dist/ \
     -V theme=beige
