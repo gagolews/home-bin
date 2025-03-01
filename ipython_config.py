@@ -12,7 +12,7 @@ print("Loaded module aliases: np, pd, plt, sns.", end="")
 """
 
 c.TerminalIPythonApp.display_banner = False
-c.TerminalIPythonApp.matplotlib = "qtcairo"
+c.TerminalIPythonApp.matplotlib = "qt6"
 #c.TerminalInteractiveShell.history_load_length = 0
 #c.TerminalInteractiveShell.history_length = 1000
 c.TerminalInteractiveShell.autosuggestions_provider = None

@@ -44,4 +44,9 @@ pandoc $infile -o $outfile \
     -V revealjs-url=https://unpkg.com/reveal.js@^4 \
     --incremental \
     --katex=https://cdn.jsdelivr.net/npm/katex@0.16.20/dist/ \
-    -V theme=beige
+    -V theme=white \
+    -V controlsTutorial=false \
+    -V slideNumber=true \
+    -V autoCenter=false \
+    -V margin=0.01
+    -V center=false

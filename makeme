@@ -6,7 +6,7 @@ Executes a custom build/view/clean command based on a file's extension.
 
 # ########################################################################## #
 #                                                                            #
-#   Copyleft (C) 2020-2023, Marek Gagolewski <https://www.gagolewski.com>    #
+#   Copyleft (C) 2020-2025, Marek Gagolewski <https://www.gagolewski.com>    #
 #                                                                            #
 #                                                                            #
 #   This program is free software: you can redistribute it and/or modify     #
@@ -76,7 +76,7 @@ cmds = {
                 "-interaction=errorstopmode ${FILE_NAME} && "
                 "xelatex  -shell-escape ${FILE_NAME}",
         "view":
-                "okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+                "kstart okular ${FILE_DIRNAME}/${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
                 "${FILE_NAME/%${FILE_EXT}/.abs} "
@@ -106,7 +106,7 @@ cmds = {
                 "compiler = 'xelatex')"
                 "\"",
         "view":
-                "okular ${FILE_NAME/%${FILE_EXT}/.pdf}",
+                "kstart okular ${FILE_DIRNAME}/${FILE_NAME/%${FILE_EXT}/.pdf}",
         "clean":
                 "rm -f "
                 "${FILE_NAME/%${FILE_EXT}/.abs} "
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Executes a custom build/view/clean/etc. command based on "
         "a file's extension.",
-        epilog="Copyleft (C) 2020-2023, Marek Gagolewski <https://www.gagolewski.com>",
+        epilog="Copyleft (C) 2020-2025, Marek Gagolewski <https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("cmd", type=str,
