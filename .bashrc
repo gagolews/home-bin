@@ -17,3 +17,6 @@ alias qdbus='qdbus6'
 alias mplayer='mplayer -nolirc -msgcolor'
 
 export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ "
+
+export CPPFLAGS="-O3 -march=native"
+export PKG_CPPFLAGS="-O3 -march=native"

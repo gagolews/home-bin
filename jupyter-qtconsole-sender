@@ -38,6 +38,8 @@ kate config:
 
 * TODO: source the whole file...
     TODO "--file" ignores `cursor`, `selection`, and `chunk`"
+
+pip3 install qtpy PySide2 pybind11 shiboken2 PyQt6 --upgrade
 """
 
 QDBUS="qdbus6"

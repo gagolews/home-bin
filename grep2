@@ -23,6 +23,9 @@
 
 # Usage: grep2 [path] -FLAGSe expression
 
+
+raise Exception("use ripgrep! (rg)")
+
 import natsort
 import re
 import os
