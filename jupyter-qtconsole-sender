@@ -7,7 +7,7 @@ Send to a TCP port the commands to be executed on a Jupyter-QtConsole.
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2020-2024, Marek Gagolewski <https://www.gagolewski.com>      #
+#   Copyleft (C) 2020-2025, Marek Gagolewski <https://www.gagolewski.com>      #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -278,8 +278,8 @@ def write_qdbus(text, kernel):
 
     servicename, path, proc_name = get_running_qdbus_proc()
 
-    if kernel != "" and kernel != proc_name:
-        raise Exception("Not running process named `%s`" % kernel)
+    if kernel != "" and not proc_name.startswith(kernel):
+        raise Exception("Not running process named `%s` (is: `%s`)" % (kernel, proc_name))
 
     if proc_name in ["bash", "R"] or proc_name.startswith("ipython"):
         text = "\033[200~"+text+"\n"+"\033[201~"
