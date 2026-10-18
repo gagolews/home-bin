@@ -2,12 +2,12 @@
 # kate: default-dictionary en_AU; syntax python
 
 """
-An application that features a Jupyter-QtConsole and listens for commands to
-be executed on a TCP port.  [DEPRECATED]
+An application that features a Jupyter-QtConsole and awaits commands to
+be executed.
 
 # ############################################################################ #
 #                                                                              #
-#   Copyleft (C) 2020-2025, Marek Gagolewski <https://www.gagolewski.com>      #
+#   Copyleft (C) 2020-2026, Marek Gagolewski <https://www.gagolewski.com>      #
 #                                                                              #
 #                                                                              #
 #   This program is free software: you can redistribute it and/or modify       #
@@ -252,9 +252,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self,
             "About jupyter-qtconsole-listener",
             "An application that features a Jupyter-QtConsole "
-            "and listens for commands to execute on a TCP port.\n\n"
-            "Copyleft (C) 2020-2024, Marek Gagolewski\n"
-            "<https://www.gagolewski.com>\n\n"
+            "and awaits commands to be executed.\n\n"
+            "Copyleft (C) 2020-2026, Marek Gagolewski\n"
+            "<https://www.gagolewski.com/>\n\n"
             "QtConsole: https://github.com/jupyter/qtconsole\n"
             "Project Jupyter: https://jupyter.org/\n\n"
             "Licensed under the BSD 3-Clause License"
@@ -333,19 +333,19 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="An application that features a Jupyter-QtConsole "
-        "and listens for commands to be executed on a TCP port.",
-        epilog="Copyleft (C) 2020-2024, Marek Gagolewski "
+        "and awaits commands to be executed.",
+        epilog="Copyleft (C) 2020-2026, Marek Gagolewski "
         "<https://www.gagolewski.com>",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
         "kernel", default=['python3', 'ir'], type=str, nargs='*',
-        help="The ID of an installed kernel, e.g., 'python3' (the default), "
+        help="the ID of an installed kernel, e.g., 'python3' (the default), "
              "'bash' or 'ir'."
     )
     parser.add_argument(
         "--silent", action="store_true",
-        help="Should the printing of all messages be suppressed."
+        help="whether the printing of all messages be suppressed."
     )
     parser.add_argument(
         "--port", default=6666, type=int,

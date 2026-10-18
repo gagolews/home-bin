@@ -67,6 +67,12 @@ cmds = {
                 "xelatex  -shell-escape ${FILE_NAME}; "
                 "bibtex ${FILE_NAME/%${FILE_EXT}/} && "
                 "xelatex  -shell-escape ${FILE_NAME}",
+        "xelatex_biber":
+                "xelatex -file-line-error -halt-on-error -shell-escape "
+                "-interaction=errorstopmode ${FILE_NAME} && "
+                "xelatex  -shell-escape ${FILE_NAME}; "
+                "biber ${FILE_NAME/%${FILE_EXT}/} && "
+                "xelatex  -shell-escape ${FILE_NAME}",
         "pdflatex_nobibtex":
                 "pdflatex -file-line-error -halt-on-error -shell-escape "
                 "-interaction=errorstopmode ${FILE_NAME} && "
@@ -128,7 +134,8 @@ cmds = {
     },
     "Rmd": {
         "_yaml": True,
-        "view":  "preview_Rmd ${FILE_NAME}",
+        "view": "kstart okular ${FILE_DIRNAME}/${FILE_NAME/%${FILE_EXT}/.pdf}",
+        "build": "knit2pdf ${FILE_NAME}",
     },
     "md": {
         "_yaml": True,
